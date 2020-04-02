@@ -1,0 +1,52 @@
+{% extends "_base.html" %}
+{% load static %}
+
+{% block title %}
+Личный кабинет
+{% endblock %}
+
+{% block base_content %}
+<div class="container">
+    <h1> Личный кабинет </h1>
+<p>Добро пожаловать, {{ username }}!</p>
+    <div class="row">
+        <div class="col-3">
+        <div class="card" style="border: 0">
+            {% if user.profile.photo %}
+                    <img class="card-img-top user-img" src="{{ MEDIA_URL }}{{ user.profile.photo_url }}" alt="Аватар">
+
+            {% else %}
+                <img src="{{ MEDIA_URL }}{{ user.profile.photo_url }}" alt="Аватар">
+            {% endif %}
+        </div>
+{#            <a href="{{ MEDIA_URL }}{{ user.profile.photo.url }}" alt="Аватар">#}
+            <form action="." method="post" enctype="multipart/form-data">
+                {{ user_form.as_p }}
+                {{ profile_form.as_p }}
+                {% csrf_token %}
+                <p><input type="submit" value="Save changes"></p>
+            </form>
+
+        </div>
+        <div class="col">
+            <h1>Ваши заказы</h1>
+            <ul>
+                <li>1. Заказ</li>
+                <li>2. Заказ</li>
+                <li>3. Заказ</li>
+                <li>4. Заказ</li>
+            </ul>
+        </div>
+            <div class="col-2">
+            {% if request.user.is_staff %}
+                <p><a class="btn btn-primary" href="../admin/">Админка</a></p>
+            {% endif %}
+            <p><a class="btn btn-secondary" href="{% url 'password_change'%}">Изменить пароль</a></p>
+        </div>
+
+    </div>
+
+
+
+</div>
+{% endblock %}

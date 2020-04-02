@@ -1,0 +1,77 @@
+{% extends "registration/_registration_base.html" %}
+{% load static %}
+
+{% block title %}
+LogIn
+{% endblock %}
+
+{% block content %}
+
+    <form action="{% url 'login' %}" method="post">
+        {% csrf_token %}
+        <h3 class="m-3">LogIn</h3>
+        {% if form.errors %}
+            <h6 class="m-3 text-danger">Нет таких логина и пароля. Попробуйте еще.</h6>
+        {% endif %}
+
+        <input type="text" id="login" class="fadeIn second" name="username" placeholder="login">
+        <input type="password" id="password" class="fadeIn third" name="password" placeholder="password">
+        <input type="hidden" name="next" value="{{ next }}" />
+        <input type="submit" class="fadeIn fourth" value="Log In">
+    </form>
+
+
+    <div id="formFooter">
+        <a class="underlineHover" href="{% url 'password_reset'%}">Forgot Password?</a><br>
+{#        <a class="underlineHover" href="{% url 'home'%}">Вернуться на главную</a>#}
+    </div>
+
+{% endblock %}
+{#{% extends  'base.html' %}#}
+{#{% load static %}#}
+{##}
+{#{% block meta %}#}
+{#    <link rel="stylesheet" href="{% static 'css/login_base.css' %}">#}
+{#{% endblock meta %}#}
+{##}
+{#{% block base_content %}#}
+{#<div class="container">#}
+{#    <div class="wrapper fadeInDown">#}
+{#        <div id="formContent">#}
+{#        <!-- Tabs Titles -->#}
+{##}
+{#            <!-- Icon -->#}
+{#            <div class="fadeIn first">#}
+{#                <img src="http://danielzawadzki.com/codepen/01/icon.svg" id="icon" alt="User Icon" />#}
+{#            </div>#}
+{##}
+{#        <!-- Login Form -->#}
+{#            <form>#}
+{#                {% if form.errors %}#}
+{#                    <p>Нет таких логина и пароля. Попробуйте еще.</p>#}
+{#                {% endif %}#}
+{#                <input type="text" id="login" class="fadeIn second" name="login" placeholder="login">#}
+{#                <input type="text" id="password" class="fadeIn third" name="login" placeholder="password">#}
+{#                <input type="hidden" name="next" value="{{ next }}" />#}
+{#                <input type="submit" class="fadeIn fourth" value="Log In">#}
+{#            </form>#}
+{##}
+{#        <!-- Remind Passowrd -->#}
+{#            <div id="formFooter">#}
+{#              <a class="underlineHover" href="{% url 'password_reset'%}">Forgot Password?</a><br>#}
+{#              <a class="underlineHover" href="{% url 'home'%}">Вернуться на главную</a>#}
+{#            </div>#}
+{##}
+{#        </div>#}
+{#    </div>#}
+{#    </div>#}
+{#{% endblock %}#}
+{##}
+{#{% block return-top %}#}
+{##}
+{#{% endblock %}#}
+{##}
+{##}
+{#{% block admin-panel %}#}
+{##}
+{#{% endblock %}#}

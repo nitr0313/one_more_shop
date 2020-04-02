@@ -1,0 +1,76 @@
+
+
+.user-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 100px;
+    /*align-self: flex-start; */
+    object-fit: cover;
+    -webkit-box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 1);
+    -moz-box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 1);
+    box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 1);
+}
+
+
+/*!* 2 колонки на sm *!*/
+/*@media (min-width: 576px) {*/
+/*    .card-columns {*/
+/*        -webkit-column-count: 2;*/
+/*        column-count: 2*/
+/*    }*/
+/*}*/
+/*!* 3 колонки на md *!*/
+/*@media (min-width: 768px) {*/
+/*    .card-columns {*/
+/*        -webkit-column-count: 3;*/
+/*        column-count: 3*/
+/*    }*/
+/*}*/
+/*!* 4 колонки на lg и xl *!*/
+/*@media (min-width: 992px) {*/
+/*    .card-columns {*/
+/*        -webkit-column-count: 4;*/
+/*        column-count: 4;*/
+/*    }*/
+/*}*/
+
+.rating-area {
+	overflow: hidden;
+	width: 7rem;
+	margin: 0 auto;
+}
+.rating-area:not(:checked) > input {
+	display: none;
+}
+.rating-area:not(:checked) > label {
+	float: right;
+	width: 21px;
+	padding: 0;
+	cursor: pointer;
+	font-size: 20px;
+	line-height: 20px;
+	color: lightgrey;
+	text-shadow: 1px 1px #bbb;
+}
+.rating-area:not(:checked) > label:before {
+	content: '★';
+}
+.rating-area > input:checked ~ label {
+	color: gold;
+	text-shadow: 1px 1px #c60;
+}
+.rating-area:not(:checked) > label:hover,
+.rating-area:not(:checked) > label:hover ~ label {
+	color: gold;
+}
+.rating-area > input:checked + label:hover,
+.rating-area > input:checked + label:hover ~ label,
+.rating-area > input:checked ~ label:hover,
+.rating-area > input:checked ~ label:hover ~ label,
+.rating-area > label:hover ~ input:checked ~ label {
+	color: gold;
+	text-shadow: 1px 1px goldenrod;
+}
+.rate-area > label:active {
+	position: relative;
+}

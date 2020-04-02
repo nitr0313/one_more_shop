@@ -1,0 +1,17 @@
+{% extends "registration/_registration_base.html" %}
+
+{% block title %}
+LogOut
+{% endblock %}
+
+{% block content %}
+
+<div class="card card-login">
+
+            <div id="formFooter">
+                <h4 class="card-title">You are logged out!</h4>
+{#                <a class="underlineHover" href="{% url 'home'%}">Вернуться на главную</a> <br>#}
+                <a class="underlineHover" href="{% url 'login'%}">Log in again</a><br>
+            </div>
+</div>
+{% endblock %}
