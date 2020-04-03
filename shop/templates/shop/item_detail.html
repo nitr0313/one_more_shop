@@ -5,6 +5,74 @@
 {% endblock %}
 
 {% block content %}
-    <h1>Описание товара</h1>
-    {{ admin_object.title }}
+    <h2 class="mt-5 ">{{ item.title }}</h2>
+    <div class="row w-150">
+        <div class="col">
+            <img src="{{ MEDIA_URL }}{{ item.get_photo_url }}" style="max-width: 250px" alt="{{ item.title }}">
+        </div>
+        <div class="col">
+            <div class="row">
+                <h4>Описание: </h4>
+                <ul>
+                    <li>
+                        {{ item.description }}
+                    </li>
+                    <li>Цена: {{ item.price }}<br>
+                        Скидка: {{ item.discount }}<br>
+                        Цена со скидкой:<b> {{ item.get_price }} </b>
+                    </li>
+                    <li>
+                        Средний рейтинг: {{ item.get_rating }}
+                    </li>
+                    <li>
+                        Заказов: {{ item.get_rating_count }}
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+    {% if request.user.is_authenticated %}
+        <div class="row m-5">
+            <a class="btn btn-success m-3" data-toggle="collapse" href="#collapseOrder" role="button" aria-expanded="false"
+               aria-controls="collapseOrder">
+                Заказать!
+            </a>
+    {% else %}
+
+        <h3>Для заказа зарегистрируйтесь или залогиньтесь</h3>
+        <div class="row m-5">
+    {% endif %}
+            <a class="btn btn-primary m-3" data-toggle="collapse" href="#collapseReviews" role="button"
+               aria-expanded="false" aria-controls="collapseReviews">
+                Отзывов - {{ item.get_rating_count }}:
+            </a>
+        </div>
+
+    <div class="collapse  w-50" id="collapseOrder">
+        <div class="card card-body">
+            Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil
+            anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        </div>
+    </div>
+
+    <div class="collapse w-50" id="collapseReviews">
+
+        {% for comment in comments %}
+            <div class="card card-body">
+                Пользователь: {{ comment.user.username }}<br>
+                Поставил отценку: {{ comment.rating }}<br>
+                Отзыв: {{ comment.body }}
+            </div>
+        {% empty %}
+            <div class="card card-body">
+                Отзывов пока нет
+            </div>
+        {% endfor %}
+
+
+    </div>
+
+</div>
 {% endblock %}

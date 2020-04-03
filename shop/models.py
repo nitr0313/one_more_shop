@@ -38,14 +38,14 @@ class Item(models.Model):
     def get_photo_url(self):
         if self.photo and hasattr(self.photo, 'url'):
             return self.photo.url
-        return 'media/users/no_image.png'
+        return '/media/items/no_image.png'
 
     def photo_tag(self):
         return mark_safe(f'<img src="/{self.get_photo_url()}" width="50" height="50" style="object-fit: cover;"/>')
         # return self.photo_url
 
     def get_favorite_count(self):
-        return Favorite.objects.all().count()
+        return Favorite.objects.filter(item=self).count()
     
     def get_detail_url(self):
         return reverse('item_detail_url', kwargs={'slug': self.slug})
@@ -66,6 +66,9 @@ class Item(models.Model):
         # print(rates)
         return sum([int(r.rating) for r in rates]) / len(rates)
 
+    def get_rating_count(self):
+        return ItemRating.objects.filter(item=self).count()
+
 
 class ItemRating(models.Model):
     """
@@ -85,7 +88,7 @@ class ItemRating(models.Model):
 
     def __str__(self):
         return f'{self.item} {self.rating} {self.user}'
-
+    
     class Meta:
         verbose_name_plural = 'Отценки пользователей'
         verbose_name = 'Отценка пользователя'
@@ -94,11 +97,11 @@ class ItemRating(models.Model):
 
     def items_list(self):
         rew_all_sum = ItemRating.objects.aggregate(models.Sum('rating')).values()[0]
-        rew_all_count = ItemRating.objects.filter(school__id=self.kwargs['id']).count()
+        rew_all_count = ItemRating.objects.filter(item__id=self.kwargs['id']).count()
 
 
 class Favorite(models.Model):
-    item = models.ForeignKey('Item', on_delete=models.CASCADE)
+    item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name='favorite')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     create_date = models.DateField(auto_now_add=True)
 
@@ -109,6 +112,7 @@ class Favorite(models.Model):
         verbose_name = 'Предмет помещенный в избранное'
         verbose_name_plural = 'Избранное'
         ordering = ('item', 'create_date')
+        unique_together = ('user', 'item')
 
 
 class Order(models.Model):
