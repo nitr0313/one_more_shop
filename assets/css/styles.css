@@ -34,8 +34,15 @@
 /*    }*/
 /*}*/
 
-.added {
-	background: yellow;
+/*.added {*/
+/*	background: green;*/
+/*}*/
+
+.image {
+	/*border-radius: 10px;*/
+	border: 0;
+	border: #0d0d0d;
+	/*border-bottom: groove;*/
 }
 
 .rating-area {

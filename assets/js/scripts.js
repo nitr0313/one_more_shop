@@ -37,7 +37,8 @@ $.ajaxSetup({
 const add_to_favorites_url = '/add_to_fav/';
 const remove_from_favorites_url = '/remove_fav/';
 const favorites_api_url = '/v1/api/';
-const added_to_favorites_class = 'added';
+const added_to_favorites_class = 'fa-thumbs-up added';
+const not_favorites_class = 'fa-thumbs-o-up';
 
 function add_to_favorites() {
     $('.add-to-favorites').each((index, el) => {
@@ -48,7 +49,7 @@ function add_to_favorites() {
             const id = $(el).data('id');
             console.log(el);
             if ($(e.target).hasClass(added_to_favorites_class)) {
-                console.log('has class ' + added_to_favorites_class);
+                // console.log('has class ' + added_to_favorites_class);
                 $.ajax({
                     url: remove_from_favorites_url,
                     type: 'POST',
@@ -59,13 +60,12 @@ function add_to_favorites() {
                     },
                     success: (data) => {
                         $(el).removeClass(added_to_favorites_class);
-                        // $('form[name="remove-from-favorites-' + type + '-' + id + '"]').css('display', 'none');
-
-                        get_favorites()
+                        $(el).addClass(not_favorites_class);
+                         get_favorites()
                     }
                 });
             } else {
-                console.log('has NO class ' + added_to_favorites_class);
+                // console.log('has NO class ' + added_to_favorites_class);
                 $.ajax({
                     url: add_to_favorites_url,
                     type: 'POST',
@@ -75,18 +75,14 @@ function add_to_favorites() {
                         id: id,
                     },
                     success: (data) => {
+                        $(el).removeClass(not_favorites_class);
                         $(el).addClass(added_to_favorites_class);
-                        // $('form[name="remove-from-favorites-' + type + '-' + id + '"]').css('display', 'none');
-
                         get_favorites()
                     }
                 })
-
             }
-
         })
     })
-
 }
 
 function get_favorites() {
@@ -103,8 +99,18 @@ function get_favorites() {
                     if (json[i].type == type && json[i].id == id) {
                         if (json[i].user_has === true) {
                             $(el).addClass(added_to_favorites_class);
+                        } else {
+                            $(el).addClass(not_favorites_class);
+                            // Если открыта страница избранного, то при удалении из избранного
+                            // больше не карточку этого элемента
+                            if (window.location.pathname === "/favorites/") {
+                                $(el).parent().parent().parent().parent().attr('hidden', 'true');
+                            }
+
+
                         }
-                        $(el).children(":first").text(json[i].count);
+
+                        $(el).text(json[i].count);
                     }
                 })
             }

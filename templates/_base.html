@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <script src="https://kit.fontawesome.com/b0911ae351.js" crossorigin="anonymous"></script>
     {% block meta %}
 
     {% endblock %}
@@ -17,7 +19,7 @@
         Base TITLE
     {% endblock %}</title>
 </head>
-<body>
+<body style='background-image: url("{{ MEDIA_URL }}/media/terracotta-ringo.png")'>
 <nav>
     {% block base_nav_bar %}
 
@@ -29,7 +31,7 @@
 {% block base_content %}
     <div class="container">
         {% block content %}
-            <h1>Hello, world!</h1>
+            <h1>Это базовый шаблон, если вы это видите значит что-то не так ;)</h1>
 
         {% endblock content %}
     </div>

@@ -11,7 +11,7 @@
 <p>Добро пожаловать, {{ username }}!</p>
     <div class="row">
         <div class="col-3">
-        <div class="card" style="border: 0">
+        <div class="card" style="border: 0;background: top">
             {% if user.profile.photo %}
                     <img class="card-img-top user-img" src="{{ MEDIA_URL }}{{ user.profile.photo_url }}" alt="Аватар">
 

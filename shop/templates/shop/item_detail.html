@@ -5,15 +5,15 @@
 {% endblock %}
 
 {% block content %}
-    <h2 class="mt-5 ">{{ item.title }}</h2>
+    <h1 class="mt-5">{{ item.title }}</h1>
     <div class="row w-150">
         <div class="col">
             <img src="{{ MEDIA_URL }}{{ item.get_photo_url }}" style="max-width: 250px" alt="{{ item.title }}">
         </div>
         <div class="col">
-            <div class="row">
+            <div class="row" style="background-image: url('{{ MEDIA_URL }}/media/white-ringo.png')">
                 <h4>Описание: </h4>
-                <ul>
+                <ul class="mt-3">
                     <li>
                         {{ item.description }}
                     </li>
