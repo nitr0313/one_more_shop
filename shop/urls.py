@@ -11,7 +11,11 @@ urlpatterns = [
     path('item/<str:slug>/', ItemDetail.as_view(), name='item_detail_url'),
     path('add_to_fav/', add_to_favorites, name='add_to_favorites'),
     path('remove_fav/', remove_from_favorites, name='remove_from_favorites'),
-    path('v1/api/', favorites_api, name='api')
+    path('v1/api/favorites/', favorites_api, name='api'),
+    path('cart/', cart, name='cart'),
+    path('add_to_cart/', add_to_cart, name='add_to_cart'),
+    path('remove_cart/', remove_from_cart, name='remove_from_CART'),
+    path('v1/api/cart/', cart_api),
     # path('', include('django.contrib.auth.urls')),
 ]
 if settings.DEBUG:

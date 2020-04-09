@@ -1,0 +1,37 @@
+{% extends "_base.html" %}
+{% load static %}
+{% load math %}
+
+{% block title %}
+    Корзина
+{% endblock %}
+
+{% block content %}
+    <table>
+        <thead>
+        <tr>
+            <td>ID</td>
+            <td>Название</td>
+            <td>Количество</td>
+            <td>Цена</td>
+            <td>Сумма</td>
+        </tr>
+        </thead>
+    <tbody>
+        {% for item in cart %}
+            <tr>
+                <td> {{ item.id }} </td>
+                <td> {{ item.title }} </td>
+                <td> 1 </td>
+                <td> {{ item.get_price_with_discount }} </td>
+                <td> {% multiply 1 item.get_price_with_discount %}</td>
+            </tr>
+        {% empty %}
+            <tr>
+
+            </tr>
+        {% endfor %}
+    </tbody>
+
+    </table>
+{% endblock %}

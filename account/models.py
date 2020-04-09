@@ -26,10 +26,10 @@ class Profile(models.Model):
     def photo_url(self):
         if self.photo and hasattr(self.photo, 'url'):
             return self.photo.url
-        return 'media/users/no_image.png'
+        return '/media/users/no_image.png'
 
     def photo_tag(self):
-        return mark_safe(f'<img src="/{self.photo_url}" width="50" height="50" style="object-fit: cover;"/>')
+        return mark_safe(f'<img src="{self.photo_url}" width="50" height="50" style="object-fit: cover;"/>')
         # return self.photo_url
 
     photo_tag.short_description = 'Photo'

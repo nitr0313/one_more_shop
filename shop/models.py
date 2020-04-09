@@ -5,12 +5,12 @@ from pytils.translit import slugify
 from django.utils.safestring import mark_safe
 from django.urls.base import reverse
 
-
 User = get_user_model()
 
 
 class Item(models.Model):
     slug = models.SlugField(unique=True, verbose_name='URL', allow_unicode=True, blank=True)
+    category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=150, unique=True, verbose_name="Название")
     description = models.TextField(max_length=1000, verbose_name="Описание", blank=True, default="")
     price = models.FloatField(verbose_name="Цена", default=0.0)
@@ -23,12 +23,19 @@ class Item(models.Model):
 
     def __str__(self):
         return f'{self.id} {self.title} {self.price}'
-    
+
+    def as_dict(self):
+        d = {
+            'slug': self.slug,
+            'title': self.title,
+            'price': self.get_price_with_discount,
+        }
+        return d
+
     def save(self, *args, **kwargs):
         if not self.id or not self.slug:
             self.slug = slugify(self.title)
         return super().save(*args, **kwargs)
-            
 
     class Meta:
         ordering = ('title', 'price')
@@ -41,22 +48,28 @@ class Item(models.Model):
         return '/media/items/no_image.png'
 
     def photo_tag(self):
-        return mark_safe(f'<img src="/{self.get_photo_url()}" width="50" height="50" style="object-fit: cover;"/>')
+        return mark_safe(f'<img src="{self.get_photo_url()}" width="50" height="50" style="object-fit: cover;"/>')
         # return self.photo_url
 
     def get_favorite_count(self):
         return Favorite.objects.filter(item=self).count()
-    
+
     def get_detail_url(self):
         return reverse('item_detail_url', kwargs={'slug': self.slug})
 
-    # def get_absolute_url(self):
-    #     return redirect(self.slug)
+    @staticmethod
+    def get_price(price):
+        kop = int((round(price, 2) - int(price)) * 100)
+        return f'{int(price)}{"," + str(kop) if kop else ""} руб.'
 
     @property
-    def get_price(self):
+    def get_raw_price(self):
+        return self.get_price(self.price)
+
+    @property
+    def get_price_with_discount(self):
         price_with_discount = self.price - self.price / 100 * self.discount
-        return f'{price_with_discount} р.'
+        return self.get_price(price_with_discount)
 
     @property
     def get_rating(self):
@@ -68,6 +81,51 @@ class Item(models.Model):
 
     def get_rating_count(self):
         return ItemRating.objects.filter(item=self).count()
+
+
+class Category(models.Model):
+    title = models.CharField(max_length=50)
+    parent = models.ForeignKey(
+        'Category', on_delete=models.SET_NULL, null=True, blank=True)
+    item_spec = models.ManyToManyField('SpecItem', related_name='item_cat', null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Категория товаров'
+        verbose_name_plural = 'Категории товаров'
+
+
+class SpecItem(models.Model):
+    """
+    Характеристики товара
+    """
+    item = models.ForeignKey('Item', on_delete=models.CASCADE, null=True, related_name='specs')
+    title = models.CharField(max_length=200, verbose_name='Наименование арактеристики, (и единица измерения)')
+    value = models.ForeignKey('SpecValue', verbose_name='Значение характеристики', on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return f'{self.title} - {self.value}'
+
+    class Meta:
+        verbose_name = 'Характеристика'
+        verbose_name_plural = 'Характеристики товара'
+        unique_together = ('title', 'value')
+
+
+class SpecValue(models.Model):
+    """
+    Занчение характеристики
+    """
+    value = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.value
+
+    class Meta:
+        verbose_name = "Значение характеристики"
+        verbose_name_plural = "Значения характеристик"
 
 
 class ItemRating(models.Model):
@@ -88,7 +146,7 @@ class ItemRating(models.Model):
 
     def __str__(self):
         return f'{self.item} {self.rating} {self.user}'
-    
+
     class Meta:
         verbose_name_plural = 'Отценки пользователей'
         verbose_name = 'Отценка пользователя'

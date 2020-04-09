@@ -1,12 +1,26 @@
-<div class="rating-area">
-    <input type="radio" id="star-5-{{ item.id }}" name="rating" value="5">
-    <label for="star-5-{{ item.id }}" title="Оценка «5»"></label>
-    <input type="radio" id="star-4-{{ item.id }}" name="rating" value="4">
-    <label for="star-4-{{ item.id }}" title="Оценка «4»"></label>
-    <input type="radio" id="star-3-{{ item.id }}" name="rating" value="3">
-    <label for="star-3-{{ item.id }}" title="Оценка «3»"></label>
-    <input type="radio" id="star-2-{{ item.id }}" name="rating" value="2">
-    <label for="star-2-{{ item.id }}" title="Оценка «2»"></label>
-    <input type="radio" id="star-1-{{ item.id }}" name="rating" value="1">
-    <label for="star-1-{{ item.id }}" title="Оценка «1»"></label>
+{#<div class="rating-area">#}
+{#    <input type="radio" id="star-5-{{ item.id }}" name="rating" value="5">#}
+{#    <label for="star-5-{{ item.id }}" title="Оценка «5»" ></label>#}
+{#    <input type="radio" id="star-4-{{ item.id }}" name="rating" value="4">#}
+{#    <label for="star-4-{{ item.id }}" title="Оценка «4»"></label>#}
+{#    <input type="radio" id="star-3-{{ item.id }}" name="rating" value="3">#}
+{#    <label for="star-3-{{ item.id }}" title="Оценка «3»"></label>#}
+{#    <input type="radio" id="star-2-{{ item.id }}" name="rating" value="2">#}
+{#    <label for="star-2-{{ item.id }}" title="Оценка «2»"></label>#}
+{#    <input type="radio" id="star-1-{{ item.id }}" name="rating" value="1">#}
+{#    <label for="star-1-{{ item.id }}" title="Оценка «1»"></label>#}
+{#</div>#}
+<div class="rating-result">
+	<span class="{% if item.get_rating > 0 %} active
+	{% endif %} "></span>
+	<span class="{% if item.get_rating >= 1 %} active
+	{% endif %}"></span>
+	<span class="{% if item.get_rating >= 2 %} active
+	{% endif %}"></span>
+	<span class="{% if item.get_rating >= 4 %} active
+	{% endif %}"></span>
+	<span class="{% if item.get_rating == 5 %} active
+	{% endif %}"></span>
+    <b class="{% if item.get_rating > 0 %} active
+	{% endif %} ">{{ item.get_rating }}</b>
 </div>

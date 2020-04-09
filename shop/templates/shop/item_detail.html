@@ -1,7 +1,8 @@
 {% extends "_base.html" %}
+{% load static %}
 
 {% block title %}
-    {{ admin_object.title }}
+    Описание {{ admin_object.title }}
 {% endblock %}
 
 {% block content %}
@@ -11,15 +12,15 @@
             <img src="{{ MEDIA_URL }}{{ item.get_photo_url }}" style="max-width: 250px" alt="{{ item.title }}">
         </div>
         <div class="col">
-            <div class="row" style="background-image: url('{{ MEDIA_URL }}/media/white-ringo.png')">
+            <div class="row" style="">
                 <h4>Описание: </h4>
                 <ul class="mt-3">
                     <li>
                         {{ item.description }}
                     </li>
-                    <li>Цена: {{ item.price }}<br>
-                        Скидка: {{ item.discount }}<br>
-                        Цена со скидкой:<b> {{ item.get_price }} </b>
+                    <li>Цена: {{ item.get_raw_price }}<br>
+                        Скидка: -{{ item.discount }}%<br>
+                        Цена со скидкой:<b> {{ item.get_price_with_discount }} </b>
                     </li>
                     <li>
                         Средний рейтинг: {{ item.get_rating }}
@@ -27,6 +28,17 @@
                     <li>
                         Заказов: {{ item.get_rating_count }}
                     </li>
+                    <li>
+                        Добавить в избранное:
+                        {% include 'shop/includes/favorites.html' %}
+                    </li>
+                    Характеристики:
+                    {% for spec in specs %}
+                        <li>
+                            {{ spec.title }} - {{ spec.value }}
+                        </li>
+                    {% endfor %}
+
                 </ul>
             </div>
 
@@ -46,7 +58,7 @@
     {% endif %}
             <a class="btn btn-primary m-3" data-toggle="collapse" href="#collapseReviews" role="button"
                aria-expanded="false" aria-controls="collapseReviews">
-                Отзывов - {{ item.get_rating_count }}:
+                Отзывов: {{ item.get_rating_count }}
             </a>
         </div>
 
@@ -75,4 +87,8 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/scripts.js' %}"></script>
 {% endblock %}

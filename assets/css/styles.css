@@ -11,6 +11,11 @@
     box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 1);
 }
 
+.navbar{padding:0} /* убираем стандартные отступы */
+.navbar-light .navbar-nav .nav-link{
+	font-weight:600
+} /* меняем цвет ссылок в меню и толщину шрифта */
+/*li.nav-item.active,li.nav-item:hover,li.nav-item:focus{background-color:#007bff} !* д*/
 
 /*!* 2 колонки на sm *!*/
 /*@media (min-width: 576px) {*/
@@ -45,43 +50,74 @@
 	/*border-bottom: groove;*/
 }
 
-.rating-area {
-	overflow: hidden;
-	width: 7rem;
+/*.rating-area {*/
+/*	overflow: hidden;*/
+/*	width: 7rem;*/
+/*	margin: 0 auto;*/
+/*}*/
+/*.rating-area:not(:checked) > input {*/
+/*	display: none;*/
+/*}*/
+/*.rating-area:not(:checked) > label {*/
+/*	float: right;*/
+/*	width: 15px;*/
+/*	padding: 0;*/
+/*	cursor: pointer;*/
+/*	font-size: 15px;*/
+/*	line-height: 15px;*/
+/*	color: lightgrey;*/
+/*	text-shadow: 1px 1px #bbb;*/
+/*}*/
+/*.rating-area:not(:checked) > label:before {*/
+/*	content: '★';*/
+/*}*/
+/*.rating-area > input:checked ~ label {*/
+/*	color: gold;*/
+/*	text-shadow: 1px 1px #c60;*/
+/*}*/
+/*.rating-area:not(:checked) > label:hover,*/
+/*.rating-area:not(:checked) > label:hover ~ label {*/
+/*	color: gold;*/
+/*}*/
+/*.rating-area > input:checked + label:hover,*/
+/*.rating-area > input:checked + label:hover ~ label,*/
+/*.rating-area > input:checked ~ label:hover,*/
+/*.rating-area > input:checked ~ label:hover ~ label,*/
+/*.rating-area > label:hover ~ input:checked ~ label {*/
+/*	color: gold;*/
+/*	text-shadow: 1px 1px goldenrod;*/
+/*}*/
+/*.rate-area > label:active {*/
+/*	position: relative;*/
+/*}*/
+
+.rating-result {
+	width: auto;
 	margin: 0 auto;
 }
-.rating-area:not(:checked) > input {
-	display: none;
-}
-.rating-area:not(:checked) > label {
-	float: right;
-	width: 21px;
+.rating-result span {
 	padding: 0;
-	cursor: pointer;
 	font-size: 20px;
-	line-height: 20px;
+	line-height: 1;
 	color: lightgrey;
 	text-shadow: 1px 1px #bbb;
 }
-.rating-area:not(:checked) > label:before {
+.rating-result > span:before {
 	content: '★';
 }
-.rating-area > input:checked ~ label {
+.rating-result > span.active {
 	color: gold;
 	text-shadow: 1px 1px #c60;
 }
-.rating-area:not(:checked) > label:hover,
-.rating-area:not(:checked) > label:hover ~ label {
-	color: gold;
+.rating-result b {
+	padding: 0;
+	font-size: 25px;
+	line-height: 1;
+	color: lightgrey;
+	text-shadow: 1px 1px #bbb;
 }
-.rating-area > input:checked + label:hover,
-.rating-area > input:checked + label:hover ~ label,
-.rating-area > input:checked ~ label:hover,
-.rating-area > input:checked ~ label:hover ~ label,
-.rating-area > label:hover ~ input:checked ~ label {
+
+.rating-result > b.active {
 	color: gold;
-	text-shadow: 1px 1px goldenrod;
-}
-.rate-area > label:active {
-	position: relative;
+	text-shadow: 1px 1px #c60;
 }
