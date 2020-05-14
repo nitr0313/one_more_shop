@@ -106,10 +106,7 @@ function get_favorites() {
                             if (window.location.pathname === "/favorites/") {
                                 $(el).parent().parent().parent().parent().attr('hidden', 'true');
                             }
-
-
                         }
-
                         $(el).text(json[i].count);
                     }
                 })
@@ -119,9 +116,10 @@ function get_favorites() {
 }
 
 // CART FUNCTIONALITY
+// Action cart
 
 const add_to_cart_url = '/add_to_cart/';
-const remove_from_cart_url = '/remove_fav/';
+const remove_from_cart_url = '/remove_from_cart/';
 const cart_api_url = '/v1/api/cart/';
 const added_to_cart_class = 'in-cart';
 
@@ -132,32 +130,53 @@ function add_to_cart() {
 
             e.preventDefault();
             const id = $(el).data('id');
-            console.log(el);
-            if ($(el).hasClass(added_to_cart_class)) {
-                console.log('Уже в корзине');
-                // TODO оповестить что уже в корзине и сказать
-                // что можно изменить количество и удалить в самой корзине
-            } else {
-                // Добавляем в корзину
-                console.log('еще не добавлена в корзину' + e.target)
-                $.ajax({
-                    url: add_to_cart_url,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        id: id,
-                    },
-                    success: (data) => {
-                        console.log('Теперь добавлена в корзину ' + el)
-                        $(el).addClass(added_to_cart_class);
-                        get_cart_items();
-                    }
-                })
+            let quantity = $(el).data('quantity');
+            let update_quantity = $(el).data('update');
+            if (quantity === undefined) {
+                quantity = 1;
+                update_quantity = 0;
             }
+            console.log("ID " + id + " quantity " + quantity + " update " + update_quantity);
+            console.log(el);
+            $.ajax({
+                url: add_to_cart_url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    id: id,
+                    quantity: quantity,
+                    update_quantity: update_quantity,
+                },
+                success: (data) => {
+                    $(el).title = "Добавить в корзину (" + data.quantity + " уже есть)";
+                    get_cart_items();
+                }
+            })
         })
     })
 }
 
+
+function remove_from_cart(id) {
+    let result = 1;
+    $.ajax({
+        url: remove_from_cart_url,
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            id: id,
+        },
+        success: (data) => {
+            console.log("EL: " + id + " удален из корзины ");
+            get_cart_items();
+        },
+        error: (data) => {
+            console.log("Ошибка удаления " + data);
+            result = 0;
+        }
+    })
+    return result;
+}
 
 function get_cart_items() {
     $.getJSON(cart_api_url, (json) => {
@@ -181,28 +200,14 @@ function get_cart_items() {
     )
 }
 
-// function get_session_favorites_statistics() {
-//     $.getJSON(favorites_api_url, (json) => {
-//         let O = $('#favorites-statistics');
-//         if (json !== null) {
-//             O.empty();
-//             let sites_plural = json.length > 1 ? ' objects' : ' objects';
-//             O.html(json.length + sites_plural + ' ' + json.toString())
-//         } else {
-//             O.empty();
-//         }
-//     })
-//
-// }
-
-$('.carousel').carousel({
-    interval: 2000
-});
-
-
 $(document).ready(function () {
     add_to_cart();
     add_to_favorites();
     get_favorites();
     get_cart_items();
+
+});
+
+$('.carousel').carousel({
+    interval: 2000
 });

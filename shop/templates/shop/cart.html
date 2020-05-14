@@ -6,8 +6,13 @@
     Корзина
 {% endblock %}
 
+{% block meta %}
+    <link rel="stylesheet" href="{% static 'css/stepper.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style_cart.css' %}">
+{% endblock %}
+
 {% block content %}
-    <table>
+    {% comment %}    <table>
         <thead>
         <tr>
             <td>ID</td>
@@ -17,21 +22,277 @@
             <td>Сумма</td>
         </tr>
         </thead>
-    <tbody>
+        <tbody>
         {% for item in cart %}
             <tr>
-                <td> {{ item.id }} </td>
-                <td> {{ item.title }} </td>
-                <td> 1 </td>
-                <td> {{ item.get_price_with_discount }} </td>
-                <td> {% multiply 1 item.get_price_with_discount %}</td>
+                <td> {{ item.item.id }} </td>
+                <td> {{ item.item.title }} </td>
+                <td> {{ item.quantity }} </td>
+                <td> {{ item.item.get_raw_price_with_discount }} </td>
+                <td> {% multiply item.quantity item.item.get_raw_price_with_discount %}</td>
             </tr>
         {% empty %}
             <tr>
 
             </tr>
         {% endfor %}
-    </tbody>
+        </tbody>
 
-    </table>
+    </table>{% endcomment %}
+
+
+    <div class="ui-32">
+
+        <div class="container-fluid">
+
+            {% comment %}
+        <!-- Cart Dropdown -->
+        <h5>Cart Dropdown</h5>
+        <hr>
+
+        <br>
+
+        <!-- Cart Dropdown Starts -->
+        <div class="ui-cart-dd">
+            <!-- Cart -->
+            <div class="ui-cart">
+                <a href="ui-32.html#">
+                    <i class="fa fa-shopping-cart cart-icon lblue"></i>
+                    <!-- Para -->
+                    <span>View your shopping cart &nbsp;<i class="fa fa-caret-down"></i></span>
+                </a>
+            </div>
+            <!-- Dropdown -->
+            <div class="ui-dd" style="display: none;">
+                <!-- Arrow Up -->
+                <div class="arrow-up"></div>
+                <!-- Dropdown Item -->
+                <div class="ui-dd-item">
+                    <!-- Dropdown Header -->
+                    <div class="ui-dd-header">
+                        <!-- Product name -->
+                        <h5><a href="ui-32.html#">Micromax</a></h5>
+                        <!-- Price -->
+                        <span>$1,200</span>
+                    </div>
+                    <!-- Dropdown Quantity -->
+                    <div class="ui-dd-quantity">
+                        <!-- Quantity -->
+                        <div class="stepper "><input type="number" min="1" max="20" value="2"
+                                                     class="quantity stepper-input"><span
+                                class="stepper-arrow up">Up</span><span
+                                class="stepper-arrow down">Down</span></div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <!-- Dropdown Item -->
+                <div class="ui-dd-item">
+                    <!-- Dropdown Header -->
+                    <div class="ui-dd-header">
+                        <!-- Product name -->
+                        <h5><a href="ui-32.html#">Samsung Galaxy</a></h5>
+                        <!-- Price -->
+                        <span>$1,000</span>
+                    </div>
+                    <!-- Dropdown Quantity -->
+                    <div class="ui-dd-quantity">
+                        <!-- Quantity -->
+                        <div class="stepper "><input type="number" min="1" max="20" value="2"
+                                                     class="quantity stepper-input"><span
+                                class="stepper-arrow up">Up</span><span
+                                class="stepper-arrow down">Down</span></div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <!-- Dropdown Item -->
+                <div class="ui-dd-item">
+                    <!-- Dropdown Header -->
+                    <div class="ui-dd-header">
+                        <!-- Product name -->
+                        <h5><a href="ui-32.html#">Nokia Lumia</a></h5>
+                        <!-- Price -->
+                        <span>$2,000</span>
+                    </div>
+                    <!-- Dropdown Quantity -->
+                    <div class="ui-dd-quantity">
+                        <!-- Quantity -->
+                        <div class="stepper "><input type="number" min="1" max="20" value="10"
+                                                     class="quantity stepper-input"><span
+                                class="stepper-arrow up">Up</span><span
+                                class="stepper-arrow down">Down</span></div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <!-- Dropdown Item -->
+                <div class="ui-dd-item">
+                    <!-- Heading -->
+                    <strong>Total: $12,000</strong>
+                    <!-- Checkout Button -->
+                    <a href="ui-32.html#" class="btn btn-green btn-sm">Checkout</a>
+                    <!-- Open Cart Button -->
+                    <a href="ui-32.html#" class="btn btn-lblue btn-sm">Open Cart</a>
+                </div>
+            </div>
+        </div>
+        <!-- Cart Dropdown Ends -->
+{% endcomment %}
+
+            <!-- View Cart -->
+            <!-- View Cart Starts -->
+            <div class="ui-view-cart">
+                <!-- Heading -->
+                <h5>View Cart</h5>
+                <hr>
+
+                <!-- Tabke Responsive -->
+                <div class="table-responsive">
+                    <!-- Table -->
+                    <table class="table">
+                        <tbody>
+                        <tr>
+                            <!-- Header -->
+                            <!-- ID -->
+                            <th>#</th>
+                            <!-- Image -->
+                            <th>Image</th>
+                            <!-- Product Name -->
+                            <th>Наименование</th>
+                            <!-- Price -->
+                            <th>Цена</th>
+                            <!-- Quantity -->
+                            <th>Количество</th>
+                            <!-- Total Price -->
+                            <th>Итого</th>
+                            <!-- Action -->
+                            <th class="text-center">Удалить</th>
+                        </tr>
+                        {% for product in cart %}
+                            <tr>
+                                <!-- Data -->
+                                <!-- ID -->
+                                <td id="num_loop">{{ forloop.counter }}</td>
+                                <!-- Image -->
+                                <td><a href="#"><img src="{{ MEDIA_URL }}{{ product.item.get_photo_url }}" alt=""
+                                                     style="max-width: 50px"></a></td>
+                                <td>
+                                    <!-- Product Name -->
+                                    <h6><a href="#">{{ product.item.title }}</a></h6>
+                                </td>
+                                <!-- Price -->
+                                <td class="lblue">₽{{ product.item.get_raw_price_with_discount }}</td>
+                                <!-- Quantity -->
+                                <td>
+                                    {#                                <div class="stepper ">#}
+                                    {#                                    <span class="minus">-</span>#}
+                                    {#                                    <input type="number" min="1" max="40" value="{{ product.quantity }}"#}
+                                    {#                                           class="quantity stepper-input">#}
+                                    {#                                    <span class="plus">+</span>#}
+                                    {#                                </div>#}
+
+                                    {% comment %}                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="minus input-group-text"
+                                                  style="cursor: pointer;-moz-user-select: none;-khtml-user-select: none;user-select: none;">-</span>
+                                        </div>
+                                        <input type="number" min="1" max="40" value="{{ product.quantity }}"
+                                               class="form-control">
+                                        <div class="input-group-append">
+                                            <span class="plus input-group-text"
+                                                  style="cursor: pointer;-moz-user-select: none;-khtml-user-select: none;user-select: none;">+</span>
+                                        </div>
+                                    </div>{% endcomment %}
+                                    <div class="input-group mb3">
+                                        <input type="text" class="form-control" value="{{ product.quantity }}">
+                                    </div>
+                                </td>
+                                <!-- Total Price -->
+                                <td class="green">
+                                    ₽{% multiply product.quantity product.item.get_raw_price_with_discount %}</td>
+                                <!-- Action -->
+                                <td class="text-center" data-id="{{ product.item.id }}">
+                                    <a href="#" class="cross remove-from-cart" data-toggle="tooltip"
+                                       data-id="{{ product.item.id }}"
+                                       data-placement="top"
+                                       title="" data-original-title="Remove">X</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        <tr>
+                            <!-- Data -->
+                            <!-- Total-->
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td><strong>Total</strong></td>
+                            <td class="red">$4,48,000</td>
+                            <td></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- View Cart Ends -->
+
+        </div>
+
+    </div>
+
+
+    <div class="input-group">
+
+        <a href="{% url 'cart_clear' %}" class="btn btn-danger">Очистить корзину</a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/stepper.js' %}"></script>
+    <script src="{% static 'js/scripts.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $(".ui-view-cart td > a.cross").click(function (e) {
+                e.preventDefault();
+                const id = $(this).data("id");
+                if (remove_from_cart(id) === 1) {
+                    $(this).parents("tr").fadeOut(300);   //FadeOut Entire Row
+                }
+            });
+
+        });
+
+        <!-- ToolTip -->
+        $(function () {
+            $('.ui-view-cart a.cross').tooltip();  //Tooltip
+        });
+
+
+        <!-- Cart Dropdown -->
+        $(document).ready(function () {
+            var hidden = true;     //Display None
+
+            <!-- Cart -->
+            $(".ui-cart a").click(function (e) {   //OnClick
+                e.preventDefault();
+                if (hidden) {
+                    $(".ui-dd").fadeIn(500, function () {
+                        hidden = false;
+                    });    //FadeIn and Visible
+                }
+            });
+
+            <!-- Html -->
+            $("html").click(function () {   //On Html Click
+                if (!hidden) {
+                    $(".ui-dd").fadeOut();   //Fade Out
+                    hidden = true;
+                }
+            });
+
+            <!-- Dropdown -->
+            $(".ui-dd").click(function (event) {    //Dropdown Item click
+                event.stopPropagation();
+            });
+        });
+
+    </script>
 {% endblock %}

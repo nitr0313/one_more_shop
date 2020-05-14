@@ -19,10 +19,24 @@
                 {% endif %}
             </ul>
             <div class="nav-item" style="margin: auto">
-                <form class="form-inline my-2 my-lg-0">
-                    <input class="form-control" type="search" placeholder="Поиск" aria-label="Search"
-                           style="height: 30px; border-radius: 15px">
-                    {#            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Поиск</button>#}
+                <form class="form-inline my-2 my-lg-0" action="{% url 'home' %} ">
+                    <div class="input-group mb-3 mt-2">
+                    <input class="form-control" type="search" name="search" placeholder="Поиск" aria-label="Search"
+                            aria-describedby="search_btn" id="search_btn" style="">
+                    <div class="input-group-append mt-1" id="search_group" style="">
+                        <button class="btn btn-sm btn-outline-success" type="submit" id="search_btn" style="">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
+{#                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Поиск</button>#}
+
+{#                    <div class="input-group mb-3">#}
+{#                        <input type="text" class="form-control" placeholder="Recipient's username"#}
+{#                               aria-label="Recipient's username" aria-describedby="button-addon2">#}
+{#                        <div class="input-group-append">#}
+{#                            <button class="btn btn-outline-secondary" type="button" id="search_btn">Button</button>#}
+{#                        </div>#}
+                    </div>
                 </form>
             </div>
 
@@ -40,37 +54,19 @@
                 {% if request.user.is_authenticated %}
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <a class="dropdown-item" href="{% url 'dashboard' %}">Личный кабинет</a>
-                        <a class="dropdown-item" href="#">Корзина</a>
+                        <a class="dropdown-item" href="{% url 'cart' %}">Корзина</a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{% url 'logout' %}">Выйти</a>
                     </div>
                 {% else %}
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="{% url 'login' %}">Логин</a>
+{#                        <a class="dropdown-item" href="{% url 'login' %}">Логин</a>#}
+                        <button class="dropdown-item" type="button" data-toggle="modal" data-target="#login-dialog">Логин</button>
                         <a class="dropdown-item" href="#">Регистрация</a>
                     </div>
                 {% endif %}
-            </div>
 
-            {#            <div class="nav-item ">#}
-            {#                <b>Привет,#}
-            {#                    {% if request.user.is_authenticated %}#}
-            {#                        <a href="{% url 'dashboard' %}">{{ request.user.first_name }}!</a>#}
-            {#                        </b>#}
-            {#                        </div>#}
-            {#                        <div class="nav-item ">#}
-            {#                            <a class="nav-link nav-cl" href="{% url 'logout' %}" tabindex="-1"#}
-            {#                               aria-disabled="true">Выйти</a>#}
-            {#                        </div>#}
-            {#                    {% else %}#}
-            {#                        Гость!#}
-            {#                        </b>#}
-            {#                        </div>#}
-            {#                        <div class="nav-item ">#}
-            {#                            <a class="nav-link nav-cl" href="{% url 'login' %}" tabindex="-1"#}
-            {#                               aria-disabled="true">Login</a>#}
-            {#                        </div>#}
-            {#                    {% endif %}#}
+            </div>
 
         </div>
     </div>

@@ -13,10 +13,11 @@ urlpatterns = [
     path('remove_fav/', remove_from_favorites, name='remove_from_favorites'),
     path('v1/api/favorites/', favorites_api, name='api'),
     path('cart/', cart, name='cart'),
+    path('cart_clear/', cart_clear, name='cart_clear'),
     path('add_to_cart/', add_to_cart, name='add_to_cart'),
-    path('remove_cart/', remove_from_cart, name='remove_from_CART'),
+    path('remove_from_cart/', remove_from_cart, name='remove_from_cart'),
     path('v1/api/cart/', cart_api),
-    # path('', include('django.contrib.auth.urls')),
+    # path('', includes('django.contrib.auth.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

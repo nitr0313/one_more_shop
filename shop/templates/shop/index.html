@@ -8,7 +8,7 @@
 {% block content %}
 
     {#        {% if section == 'home_page' %}#}
-    {#            {% include 'shop/includes/carousel.html' %}#}
+    {#            {% includes 'shop/includes/carousel.html' %}#}
     {#        {% endif %}#}
 
     <div class="card-deck mt-5">
@@ -25,7 +25,7 @@
                             {% if item.discount %}
                                 <span style="font-size: x-large; font-weight: bold">{{ item.get_price_with_discount }}</span>
                                 <span class="text-white"
-                                      style="background:rgba(194,0,0,0.67); border-radius: 5px">-{{ item.discount }}%</span>
+                                      style="background:rgba(194,0,0,0.67); border-radius: 5px" title="Скидка действует до {{ item.discount.expire_date }}">-{{ item.discount.value }}%</span>
                                 <br>
                                 <s><span class="text-muted">{{ item.get_raw_price }}</span></s>
                             {% else %}

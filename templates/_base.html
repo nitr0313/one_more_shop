@@ -10,8 +10,19 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'css/stepper.css' %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"
+          integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
     <script src="https://kit.fontawesome.com/b0911ae351.js" crossorigin="anonymous"></script>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'ico/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'ico/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'ico/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'ico/site.webmanifest' %}">
+    <link rel="mask-icon" href="{% static 'ico/safari-pinned-tab.svg' %}" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+
     {% block meta %}
 
     {% endblock %}
@@ -29,6 +40,26 @@
 </nav>
 
 {% block base_content %}
+    {% if not request.user.is_authenticated %}
+        {#        <div id="login-dialog" class="modal  in" style="display: block" tabindex="-1" role="dialog">#}
+        {#            <div class="modal-dialog modal-lg">#}
+        {#            <form class="form-inline" action="{% url 'login' %}" method="post">#}
+        {#                {% csrf_token %}#}
+        {#                <h3 class="m-3">LogIn</h3>#}
+        {#                {% if form.errors %}#}
+        {#                    <h6 class="m-3 text-danger">Нет таких логина и пароля. Попробуйте еще.</h6>#}
+        {#                {% endif %}#}
+        {##}
+        {#                <input type="text" id="login" name="username" placeholder="login">#}
+        {#                <input type="password" id="password"name="password" placeholder="password">#}
+        {#                <input type="hidden" name="next" value="{{ next }}" />#}
+        {#                <input type="submit" value="Log In">#}
+        {#            </form>#}
+        {#            </div>#}
+        {#        </div>#}
+        {% include 'includes/login_modal.html' %}
+    {% endif %}
+
     <div class="container">
         {% block content %}
             <h1>Это базовый шаблон, если вы это видите значит что-то не так ;)</h1>
@@ -47,11 +78,14 @@
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"
         integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
         crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
 {#<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"#}
 {#        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"#}
 {#        crossorigin="anonymous"></script>#}
 <script src="{% static 'js/bootstrap.js' %}"></script>
+<script src="{% static 'js/placeholder.js' %}"></script>
 {% block scripts %}
 
 {% endblock %}

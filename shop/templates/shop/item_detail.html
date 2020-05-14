@@ -19,8 +19,13 @@
                         {{ item.description }}
                     </li>
                     <li>Цена: {{ item.get_raw_price }}<br>
-                        Скидка: -{{ item.discount }}%<br>
-                        Цена со скидкой:<b> {{ item.get_price_with_discount }} </b>
+                        {% if  item.discount %}
+                            Скидка: -{{ item.discount.value }}%<br>
+                            Скидка действительна до: {{ item.discount.expire_date }}<br>
+                            Цена со скидкой:<b> {{ item.get_price_with_discount }} </b>
+                        {% endif %}
+
+
                     </li>
                     <li>
                         Средний рейтинг: {{ item.get_rating }}

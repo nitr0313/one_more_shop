@@ -5,4 +5,7 @@ register = template.Library()
 
 @register.simple_tag()
 def multiply(qty, unit_price, *args, **kwargs):
-    return str(int(qty) * float(unit_price.split(" ")[0])).replace(".", ",") + " руб."
+    total = int(qty) * unit_price
+    if int(total) == total:
+        total = int(total)
+    return str(total).replace(".", ",")

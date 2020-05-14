@@ -1,9 +1,12 @@
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.db import models
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.base import View
-
+from django.db.models import Q
+from .forms import CartAddItemForm
+from .cart import Cart
 from .models import Item, Favorite, ItemRating, SpecItem
 
 
@@ -11,19 +14,26 @@ from .models import Item, Favorite, ItemRating, SpecItem
 
 
 def home_page(request):
-    if request.method == 'POST':
-        print(request.POST)
+    if request.method == 'GET':
+        search_query = request.GET.get('search', False)
+
+    if search_query:
+        items = Item.objects.all().filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query)
+            # Q(category__title__item=search_query),
+        ).annotate(avg_review=models.Avg('item_rating__rating')).order_by(
+            '-avg_review')
     else:
-        print(request.GET)
-    items = Item.objects.all().annotate(avg_review=models.Avg('item_rating__rating')).order_by(
-        '-avg_review')
+        items = Item.objects.all().annotate(avg_review=models.Avg('item_rating__rating')).order_by(
+            '-avg_review')
     top_items = items[0:3]
     con = dict(
         section='home_page',
         items=items,
         top_items=top_items,
     )
-
+    # TODO Реализовать выбор шаблона из сессии пользователя
     return render(request, 'shop/index.html', context=con)
 
 
@@ -62,7 +72,7 @@ def add_to_favorites(request):
         }
         user = request.user
 
-        print(add_data)
+        # print(add_data)
         if user.is_authenticated and user.is_active:
             if add_data['id'] and not Favorite.objects.filter(user=user, item_id=add_data['id']):
                 Favorite.objects.create(user=user, item_id=request.POST.get('id'))
@@ -127,98 +137,99 @@ def favorites_api(request):
     return JsonResponse(data, safe=False)
 
 
+@login_required()  # TODO: Переделать так что бы перекидывало на логин при попытке добавить в корзину
+@require_POST
 def add_to_cart(request):
-    if request.method == 'POST':
-        if not request.session.get('cart'):
-            request.session['cart'] = list()
-        else:
-            request.session['cart'] = list(request.session['cart'])
-        item_id = request.POST.get('id')
-        item_exist = next((item for item in request.session['cart'] if item['id'] == item_id), False)
-
-        add_data = {
-            'id': item_id,
-            'item': Item.objects.get(id=item_id).as_dict()
-        }
-
-        if not item_exist:
-            request.session['cart'].append(add_data)
-            request.session.modified = True
-
-    if request.is_ajax():
-        item_id = request.POST.get('id')
+    cart = Cart(request)
+    print(request.POST)
+    if not request.is_ajax():
+        item = get_object_or_404(Item, id=id)
+        print(item)
+        form = CartAddItemForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            cart.add(item=item,
+                     quantity=cd['quantity'],
+                     update_quantity=cd['update']
+                     )
+    else:
+        item_id = int(request.POST.get('id'))
+        item_quantity = int(request.POST.get('quantity'))
+        update_quantity = bool(int(request.POST.get('update_quantity', False)))
+        print(f'{item_id=} {item_quantity=} {type(item_quantity)=} {update_quantity=}')
+        cart.add(item=get_object_or_404(Item, id=item_id),
+                 quantity=item_quantity,
+                 update_quantity=update_quantity
+                 )
+        count = cart.count_items(item_id)
 
         data = {
             'id': item_id,
-            'item': Item.objects.get(id=item_id).as_dict()
+            'quantity': count,
         }
-        request.session.modified = True
+        # request.session.modified = True
+        # return render(request, 'shop/cart.html', {})
         return JsonResponse(data)
 
     return redirect(request.POST.get('url_from'))
 
 
 def cart(request):
-    if request.method == 'GET':
-        cart = request.session.get('cart', False)
-        id_list = []
-        sum_price_items = 0
-        if cart:
-            for item in cart:
-                id_list.append(item['id'])
-                sum_price_items += float(item['item']['price'].split(' ')[0])
-
-        items = Item.objects.filter(id__in=id_list)
-        # sum_price_items = items.aggregate(models.Sum('get_price_with_discount'))
-        # print(items)
-        con = dict(
-            cart=items,
-            section='cart'
+    cart = Cart(request)
+    for item in cart:
+        print(item)
+        item['update_quantity_form'] = CartAddItemForm(
+            initial={
+                'quantity': item['quantity'],
+                'update': True
+            }
         )
-        return render(request, 'shop/cart.html', context=con)
+        print(item)
 
-    pass
+    con = dict(
+        cart=cart,
+        section='cart'
+    )
+    return render(request, 'shop/cart.html', context=con)
 
 
+@login_required()
+@require_POST
 def remove_from_cart(request):
     if request.method == 'POST':
+        cart = Cart(request)
         item_id = request.POST.get('id')
-        for item in request.session['cart']:
-            if item[id] == item_id:
-                item.clear()
-        while {} in request.session['cart']:
-            request.session['cart'].remove({})
-
-        if not request.session['cart']:
-            del request.session['cart']
+        for item in cart:
+            if str(item["item"].id) == item_id:
+                cart.remove(item["item"])
+                break
 
     if request.is_ajax():
         item_id = request.POST.get('id')
         data = {
             'id': item_id,
-            'item': Item.objects.get(id=item_id).as_dict()
         }
-        request.session.modified = True
         return JsonResponse(data)
 
     return redirect(request.POST.get('url_from'))
 
 
+@login_required
+def cart_clear(request):
+    # del request.session['cart']
+    cart = Cart(request)
+    cart.clear()
+    return redirect('home')
+
+
 @login_required()
 def cart_api(request):
-    if request.user.is_active and 'cart' in request.session:
-        user_cart = request.session['cart']
-    else:
-        user_cart = []
-    # items = Item.objects.filter(on_delete=False)
-    # print(all_favorites.count())
-
+    cart = Cart(request)
     data = []
-    for item in user_cart:
-        print(item)
+    for item in cart:
         tmp = dict(
-            id=item['id'],
-            item=item
+            id=item['item'].id,
+            quantity=item['quantity']
         )
         data.append(tmp)
 
