@@ -176,6 +176,7 @@ def add_to_cart(request):
 
 def cart(request):
     cart = Cart(request)
+    full_price = 0.0
     for item in cart:
         print(item)
         item['update_quantity_form'] = CartAddItemForm(
@@ -184,11 +185,13 @@ def cart(request):
                 'update': True
             }
         )
+        full_price += int(item['quantity']) * item["item"].get_raw_price_with_discount
         print(item)
 
     con = dict(
         cart=cart,
-        section='cart'
+        section='cart',
+        full_coast=full_price,
     )
     return render(request, 'shop/cart.html', context=con)
 
