@@ -1,15 +1,29 @@
 from decimal import Decimal
 from django.conf import settings
 from .models import Item
+from django.contrib.sessions.models import Session
 
 
 class Cart(object):
     def __init__(self, request):
         self.session = request.session
+        print(request.session.items())
+        user_id = request.session.get('_auth_user_id')
         cart = self.session.get(settings.CART_SESSION_ID)
         if not cart:
+            print(f'Тележка пуста {cart}')
             cart = self.session[settings.CART_SESSION_ID] = {}
+            sessions = Session.objects.all()
+            for i in range(len(sessions)):
+                data_other_session = sessions[i].get_decoded()
+                # Ищем сессию этого же пользователя с заполненной корзиной
+                if data_other_session['_auth_user_id'] == user_id and 'cart' in data_other_session and data_other_session['cart']:
+                    cart = data_other_session['cart']
+                    # sessions[i].delete() # Скопировали корзину и удаляем предыдущую сессию
+                    break
+        print(cart)
         self.cart = cart
+        # self.save()
 
     def add(self, item, quantity=1, update_quantity=False):
         """

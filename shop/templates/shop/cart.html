@@ -202,7 +202,8 @@
                                         </div>
                                     </div>{% endcomment %}
                                     <div class="input-group mb3">
-                                        <input type="text" class="form-control" value="{{ product.quantity }}">
+{#                                        <input type="text" class="form-control" value="{{ product.quantity }}">#}
+                                        {{ product.update_quantity_form.quantity }}
                                     </div>
                                 </td>
                                 <!-- Total Price -->
