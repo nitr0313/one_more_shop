@@ -143,6 +143,7 @@ def add_to_cart(request):
     cart = Cart(request)
     print(request.POST)
     if not request.is_ajax():
+        id = request.POST.get("id")
         item = get_object_or_404(Item, id=id)
         print(item)
         form = CartAddItemForm(request.POST)

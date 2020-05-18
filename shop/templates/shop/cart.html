@@ -12,130 +12,10 @@
 {% endblock %}
 
 {% block content %}
-    {% comment %}    <table>
-        <thead>
-        <tr>
-            <td>ID</td>
-            <td>Название</td>
-            <td>Количество</td>
-            <td>Цена</td>
-            <td>Сумма</td>
-        </tr>
-        </thead>
-        <tbody>
-        {% for item in cart %}
-            <tr>
-                <td> {{ item.item.id }} </td>
-                <td> {{ item.item.title }} </td>
-                <td> {{ item.quantity }} </td>
-                <td> {{ item.item.get_raw_price_with_discount }} </td>
-                <td> {% multiply item.quantity item.item.get_raw_price_with_discount %}</td>
-            </tr>
-        {% empty %}
-            <tr>
-
-            </tr>
-        {% endfor %}
-        </tbody>
-
-    </table>{% endcomment %}
-
-
     <div class="ui-32">
 
         <div class="container-fluid">
 
-            {% comment %}
-        <!-- Cart Dropdown -->
-        <h5>Cart Dropdown</h5>
-        <hr>
-
-        <br>
-
-        <!-- Cart Dropdown Starts -->
-        <div class="ui-cart-dd">
-            <!-- Cart -->
-            <div class="ui-cart">
-                <a href="ui-32.html#">
-                    <i class="fa fa-shopping-cart cart-icon lblue"></i>
-                    <!-- Para -->
-                    <span>View your shopping cart &nbsp;<i class="fa fa-caret-down"></i></span>
-                </a>
-            </div>
-            <!-- Dropdown -->
-            <div class="ui-dd" style="display: none;">
-                <!-- Arrow Up -->
-                <div class="arrow-up"></div>
-                <!-- Dropdown Item -->
-                <div class="ui-dd-item">
-                    <!-- Dropdown Header -->
-                    <div class="ui-dd-header">
-                        <!-- Product name -->
-                        <h5><a href="ui-32.html#">Micromax</a></h5>
-                        <!-- Price -->
-                        <span>$1,200</span>
-                    </div>
-                    <!-- Dropdown Quantity -->
-                    <div class="ui-dd-quantity">
-                        <!-- Quantity -->
-                        <div class="stepper "><input type="number" min="1" max="20" value="2"
-                                                     class="quantity stepper-input"><span
-                                class="stepper-arrow up">Up</span><span
-                                class="stepper-arrow down">Down</span></div>
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
-                <!-- Dropdown Item -->
-                <div class="ui-dd-item">
-                    <!-- Dropdown Header -->
-                    <div class="ui-dd-header">
-                        <!-- Product name -->
-                        <h5><a href="ui-32.html#">Samsung Galaxy</a></h5>
-                        <!-- Price -->
-                        <span>$1,000</span>
-                    </div>
-                    <!-- Dropdown Quantity -->
-                    <div class="ui-dd-quantity">
-                        <!-- Quantity -->
-                        <div class="stepper "><input type="number" min="1" max="20" value="2"
-                                                     class="quantity stepper-input"><span
-                                class="stepper-arrow up">Up</span><span
-                                class="stepper-arrow down">Down</span></div>
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
-                <!-- Dropdown Item -->
-                <div class="ui-dd-item">
-                    <!-- Dropdown Header -->
-                    <div class="ui-dd-header">
-                        <!-- Product name -->
-                        <h5><a href="ui-32.html#">Nokia Lumia</a></h5>
-                        <!-- Price -->
-                        <span>$2,000</span>
-                    </div>
-                    <!-- Dropdown Quantity -->
-                    <div class="ui-dd-quantity">
-                        <!-- Quantity -->
-                        <div class="stepper "><input type="number" min="1" max="20" value="10"
-                                                     class="quantity stepper-input"><span
-                                class="stepper-arrow up">Up</span><span
-                                class="stepper-arrow down">Down</span></div>
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
-                <!-- Dropdown Item -->
-                <div class="ui-dd-item">
-                    <!-- Heading -->
-                    <strong>Total: $12,000</strong>
-                    <!-- Checkout Button -->
-                    <a href="ui-32.html#" class="btn btn-green btn-sm">Checkout</a>
-                    <!-- Open Cart Button -->
-                    <a href="ui-32.html#" class="btn btn-lblue btn-sm">Open Cart</a>
-                </div>
-            </div>
-        </div>
-        <!-- Cart Dropdown Ends -->
-{% endcomment %}
 
             <!-- View Cart -->
             <!-- View Cart Starts -->
@@ -144,7 +24,7 @@
                 <h5>View Cart</h5>
                 <hr>
 
-                <!-- Tabke Responsive -->
+                <!-- Table Responsive -->
                 <div class="table-responsive">
                     <!-- Table -->
                     <table class="table">
@@ -202,8 +82,29 @@
                                         </div>
                                     </div>{% endcomment %}
                                     <div class="input-group mb3">
-{#                                        <input type="text" class="form-control" value="{{ product.quantity }}">#}
-                                        {{ product.update_quantity_form.quantity }}
+                                        {#                                        <input type="text" class="form-control" value="{{ product.quantity }}">#}
+                                        <form action="{% url 'add_to_cart' %}" method="post">
+                                            <div class="input-group mb-3">
+                                                {{ product.update_quantity_form.quantity }}
+                                                <div class="input-group-append">
+                                                    <button type="submit" class="form-control btn btn-sm" value=""
+                                                            title="Обновить">
+                                                        <i class="fa fa-refresh" aria-hidden="true">
+                                                        </i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {{ product.update_quantity_form.update }}
+                                            <input type="text" name="id" value="{{ product.item.id }}" hidden>
+                                            <input type="text" name="url_from" value="cart" hidden>
+                                            {% csrf_token %}
+
+                                        </form>
+
+                                        <span class=""
+                                              style="font-size: 18px; margin-left: 10px; font-weight: 300; padding: 5px 10px;">
+                                            {{ product.item.quantity_unit }}
+                                        </span>
                                     </div>
                                 </td>
                                 <!-- Total Price -->
@@ -219,7 +120,6 @@
                             </tr>
                         {% endfor %}
                         <tr>
-                            <!-- Data -->
                             <!-- Total-->
                             <td></td>
                             <td></td>
@@ -233,19 +133,16 @@
                     </table>
                 </div>
             </div>
-            <!-- View Cart Ends -->
-
         </div>
-
+        <div class="input-group">
+            <a href="{% url 'cart_clear' %}" class="btn btn-danger">Очистить корзину</a>
+{% comment %}        </div>
+        <div class="input-group">{% endcomment %}
+            <a href="{% url 'cart_clear' %}" class="btn btn-success ml-5">Оформить заказ</a>
+        </div>
     </div>
-{% comment %}    <div class="test-session">
-    test-data: {{ request.session.cart.item.price }}
-    </div>{% endcomment %}
 
-    <div class="input-group">
 
-        <a href="{% url 'cart_clear' %}" class="btn btn-danger">Очистить корзину</a>
-    </div>
 {% endblock %}
 
 {% block scripts %}

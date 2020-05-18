@@ -43,6 +43,10 @@ class SpecItemInLine(admin.TabularInline):
     raw_id_field = ['item']
 
 
+class ItemRatingInLine(admin.TabularInline):
+    model = ItemRating
+    raw_id_field = ['item']
+
 # class CategoryInLine(admin.TabularInline):
 #     model = Category
 #     raw_id_field = ['item']
@@ -50,10 +54,10 @@ class SpecItemInLine(admin.TabularInline):
 
 @register(Item)
 class ItemAdmin(admin.ModelAdmin):
-    fields = ('photo_tag', 'slug', 'category', 'title', 'description', 'price', 'discount', 'in_stock', 'on_delete')
-    list_display = ('photo_tag', 'slug', 'title', 'price', 'discount', 'in_stock', 'on_delete')
+    fields = ('photo_tag', 'slug', 'category', 'title', 'description', 'quantity_unit', 'price', 'in_stock', 'on_delete')
+    list_display = ('photo_tag', 'slug', 'title', 'quantity_unit', 'price', 'in_stock', 'on_delete')
     readonly_fields = ['photo_tag']
-    inlines = [SpecItemInLine]
+    inlines = [SpecItemInLine, ItemRatingInLine]
 
     class Meta:
         model = Item

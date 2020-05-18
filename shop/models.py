@@ -11,9 +11,12 @@ from django.utils import timezone
 User = get_user_model()
 
 UNIT_CHOICE = (
-    ('0', 'шт'),
-    ('1', 'кг'),
-    ('2', 'метр'),
+    ('шт', 'шт'),
+    ('г', 'грамм'),
+    ('кг', 'килограмм'),
+    ('м', 'метр'),
+    ('см', 'сантиметр'),
+    ('мм', 'милиметр'),
 
 )
 
@@ -30,7 +33,7 @@ class Item(models.Model):
     # rating = models.FloatField(verbose_name="Рейтинг", default=0.0)
     # discount = models.IntegerField(default=0)
     detail_url = 'item_detail_url'
-    quantity_unit = models.CharField(max_length=2, choices=UNIT_CHOICE, default="0")
+    quantity_unit = models.CharField(max_length=2, choices=UNIT_CHOICE, default="шт")
 
     def __str__(self):
         return f'{self.id} {self.title} {self.price}'
@@ -194,7 +197,7 @@ class Discount(models.Model):
 
 class ItemRating(models.Model):
     """
-    Отценки поставленные пользотвалем книге
+    Отценки поставленные пользователем
     """
     item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name='item_rating')
     body = models.TextField(verbose_name='Описание', null=True, blank=True)
@@ -205,7 +208,7 @@ class ItemRating(models.Model):
         ('2', 2),
         ('1', 1),
     )
-    rating = models.CharField(max_length=1, choices=RATING, verbose_name="Мнение пользователя о книге", default='5')
+    rating = models.CharField(max_length=1, choices=RATING, verbose_name="Мнение пользователя о товаре", default='5')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
