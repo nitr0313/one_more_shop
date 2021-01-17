@@ -9,6 +9,7 @@ __pycache__/
 venv/
 
 *.7zip
+*secret.py
 
 # idea config
 .idea/
