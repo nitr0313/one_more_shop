@@ -1,65 +1,73 @@
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.db import models
-from django.http import JsonResponse
+from django.http import JsonResponse, request
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic.base import View
+from django.views.generic.detail import DetailView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView, CreateView 
 from django.db.models import Q
 from .forms import CartAddItemForm
 from .cart import Cart
-from .models import Item, Favorite, ItemRating, SpecItem
+from .models import Item, Favorite, ItemRating, SpecItem, User
+from account.models import Profile
+from typing import *
+from decimal import Decimal
 
 
 # Create your views here.
 
 
-def home_page(request):
-    if request.method == 'GET':
-        search_query = request.GET.get('search', False)
-
-    if search_query:
-        items = Item.objects.all().filter(
-            Q(title__icontains=search_query) |
-            Q(description__icontains=search_query)
-            # Q(category__title__item=search_query),
-        ).annotate(avg_review=models.Avg('item_rating__rating')).order_by(
-            '-avg_review')
-    else:
-        items = Item.objects.all().annotate(avg_review=models.Avg('item_rating__rating')).order_by(
-            '-avg_review')
-    top_items = items[0:3]
-    con = dict(
-        section='home_page',
-        items=items,
-        top_items=top_items,
-    )
-    # TODO Реализовать выбор шаблона из сессии пользователя
-    return render(request, 'shop/index.html', context=con)
-
-
-def user_favorites(request):
-    items = Item.objects.all().annotate(avg_review=models.Avg('item_rating__rating')).order_by(
-        '-avg_review').filter(favorite__user=request.user)
-    section = 'favorites'
-    return render(request, 'shop/index.html', {'items': items, 'section': section})
-
-
-class ItemDetail(View):
+class ItemsList(ListView):
     model = Item
-    template = 'shop/item_detail.html'
 
-    def get(self, request, slug):
-        item = get_object_or_404(self.model, slug__iexact=slug)
-        comments = ItemRating.objects.filter(item__slug=slug)
-        specs = SpecItem.objects.filter(item__slug=slug)
-        con = dict(
-            item=item,
-            comments=comments,
-            detail=True,
-            specs=specs,
-        )
-        return render(request, self.template, context=con)
-        # context={self.model.__name__.lower(): obj, 'admin_object': obj, 'detail': True})
+    def get_context_data(self, **kwargs):
+        # context = super().get_context_data(**kwargs)
+        context = dict()
+        search_query = self.request.GET.get('search', False)
+
+        if search_query:
+            items = Item.objects.all().filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(category__title=search_query),
+            ).annotate(avg_review=models.Avg('item_rating__rating')).order_by(
+                '-avg_review')
+            
+        else:
+            items = Item.objects.all().annotate(avg_review=models.Avg('item_rating__rating')).order_by(
+                '-avg_review')
+            context['top_items'] = items[0:3]
+        context['items'] = items
+        context['section'] = 'home_page'
+
+        return context
+
+
+class FavoritesItems(ListView, LoginRequiredMixin):
+    model = Item
+    context_object_name = 'items'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        items = Item.objects.all().annotate(avg_review=models.Avg('item_rating__rating')).order_by(
+        '-avg_review').filter(favorite__user=self.request.user)
+        context.update(dict(items=items, section='favorites'))
+        return context
+
+
+class ItemDetail(DetailView):
+    model = Item
+    # template = 'shop/item_detail.html'
+    context_object_name = 'item'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['comments'] = ItemRating.objects.filter(item=context['item'])
+        context['specs'] = SpecItem.objects.filter(item=context['item'])
+        context['section'] = 'detail'
+        return context
 
 
 # Функционал добавление и удаления из избранного
@@ -67,7 +75,7 @@ def add_to_favorites(request):
     if request.method == 'POST':
         add_data = {
             'type': request.POST.get('type'),
-            'id': request.POST.get('id'),
+            'id': request.POST.get('id'), 
             # 'user': request.user.username
         }
         user = request.user
@@ -137,6 +145,8 @@ def favorites_api(request):
     return JsonResponse(data, safe=False)
 
 
+
+
 @login_required()  # TODO: Переделать так что бы перекидывало на логин при попытке добавить в корзину
 @require_POST
 def add_to_cart(request):
@@ -167,6 +177,7 @@ def add_to_cart(request):
         data = {
             'id': item_id,
             'quantity': count,
+            'cart_count': len(cart),
         }
         # request.session.modified = True
         # return render(request, 'shop/cart.html', {})
@@ -175,9 +186,10 @@ def add_to_cart(request):
     return redirect(request.POST.get('url_from'))
 
 
+@login_required
 def cart(request):
     cart = Cart(request)
-    full_price = 0.0
+    full_price = Decimal()
     for item in cart:
         print(item)
         item['update_quantity_form'] = CartAddItemForm(
@@ -188,11 +200,12 @@ def cart(request):
         )
         full_price += int(item['quantity']) * item["item"].get_raw_price_with_discount
         print(item)
-
+    test_item = Item.objects.all().filter(id=4)[0]
     con = dict(
         cart=cart,
         section='cart',
         full_coast=full_price,
+        test_item=test_item,
     )
     return render(request, 'shop/cart.html', context=con)
 
@@ -238,3 +251,5 @@ def cart_api(request):
         data.append(tmp)
 
     return JsonResponse(data, safe=False)
+
+

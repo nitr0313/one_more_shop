@@ -148,7 +148,10 @@ function add_to_cart() {
                     update_quantity: update_quantity,
                 },
                 success: (data) => {
+                    console.log(data);
                     $(el).title = "Добавить в корзину (" + data.quantity + " уже есть)";
+                    const el2 = document.getElementById('cart-count');
+                    el2.textContent = data['cart_count'] + " ";
                     get_cart_items();
                 }
             })
@@ -188,7 +191,6 @@ function get_cart_items() {
 
                             if (json[i].id == id) {
                                 $(el).addClass(added_to_cart_class);
-
                             } else {
                                 $(el).removeClass(added_to_cart_class);
                             }

@@ -643,3 +643,31 @@ hr {
 	font-size:18px;
 	font-weight:300;
 }
+/* NEW STYLES */
+
+.cart_list_im{
+	width:100%;
+	float:left;
+	border-bottom: 1px solid rgba(32,16,0,.07);
+	padding:15px 0px 15px 0px;
+	position:relative;
+	overflow:hidden;
+}
+
+.cart_list_im_p_c {
+    font-size: 19px;
+    position: relative;
+    overflow: hidden;
+    padding-bottom: 15px;
+	float:left;
+}
+
+.cart_list_im_p{
+	width:90px;
+	height:90px;
+	float:left;
+	background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center top;
+	margin:5px;
+}

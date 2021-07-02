@@ -62,4 +62,6 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
-/timesheets/migrations/
+trash_data/
+media/items
+media/users

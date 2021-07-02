@@ -1,0 +1,37 @@
+
+{% extends "_base.html" %}
+{% load static %}
+{% load math %}
+
+{% block title %}
+    ЗАКАЗЫ
+{% endblock %}
+
+{% block meta %}
+    <link rel="stylesheet" href="{% static 'css/style_cart.css' %}">
+{% endblock %}
+
+{% block content %}
+    {% if order_items %}
+    
+        <h3> Orders </h3>
+        <p>{{request.user.username}}</p>
+
+            
+            {% for order, items in order_items.items %}
+
+                <h4>{{ order.created }} {{ order.get_status }} {{ order.sum_order_price}}</h4>
+                <br>
+                Предметы в заказе <br>
+                {% for item in items.0 %}
+                
+                    <h5>{{ forloop.counter }} {{ item.item.title }} {{ item.quantity }} {{ item.price_on_order_date }}</h5>
+                {% endfor %}
+                <br>
+            {% endfor %}
+
+    {% else %}
+        <h3> Orders Empty </h3>
+    {% endif %}
+
+{% endblock content %}

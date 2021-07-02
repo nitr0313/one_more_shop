@@ -1,0 +1,71 @@
+{% extends "_base.html" %}
+{% load static %}
+
+{% block title %}
+    Главная страница
+{% endblock %}
+
+{% block content %}
+{% comment %}
+            {% if section == 'home_page' %}
+                {% include 'shop/includes/cart_drop_down.html' %}
+            {% endif %}{% endcomment %}
+
+    <div class="card-deck mt-5">
+        {% for item in items %}
+            <div class="card mb-3" style="min-width: 14rem; max-width: 18rem">
+                <a href="{{ item.get_detail_url }}">
+                    <img class="card-img-top image" src="{{ MEDIA_URL }}{{ item.get_photo_url }}"
+                         alt="{{ item.title }}">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title" style="text-align: center;display: none">{{ item.title }}</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item" style="border-bottom: 0">
+                            {% if item.discount %}
+                                <span style="font-size: x-large; font-weight: bold">{{ item.get_price_with_discount }}</span>
+                                <span class="text-white"
+                                      style="background:rgba(194,0,0,0.67); border-radius: 5px" title="Скидка действует до {{ item.discount.expire_date }}">-{{ item.discount.value }}%</span>
+                                <br>
+                                <s><span class="text-muted">{{ item.get_raw_price }}</span></s>
+                            {% else %}
+                                <span style="font-size: x-large; font-weight: bold">{{ item.get_raw_price }}</span><br>
+                            {% endif %}
+                        </li>
+                        <li class="list-group-item" style="border-bottom: 0; border-top: 0">
+                            {% include 'shop/includes/rating.html' %}
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card-footer bg-transparent" style="border-top: 0">
+                    <div class="row">
+                        <div class="col">
+
+                            <a href="{{ item.get_detail_url }}" class="btn btn-sm btn-info">
+                                <i class="fa fa-info-circle" aria-hidden="true">
+                                    Узнать больше
+                                </i>
+                            </a>
+
+                        </div>
+                        <div class="col col-3" style="text-align: end">
+                            {% include 'shop/includes/favorites.html' %}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        {% include 'shop/includes/add_to_cart.html' %}
+                    </div>
+                </div>
+            </div>
+
+        {% empty %}
+            <h3> Здесь пока ничего нет</h3>
+        {% endfor %}
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/scripts.js' %}"></script>
+{% endblock %}

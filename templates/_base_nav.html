@@ -16,6 +16,25 @@
                         <a class="nav-link {% if section == 'favorites' %} active {% endif %}"
                            href="{% url 'favorites' %}">Избранное</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if section == 'cart' %} active {% endif %}"
+                           href="{% url 'cart' %}">
+                            Корзина (
+                            <span id="cart-count">
+                                {% with total_items=cart|length  %}
+                                    {% if total_items > 0 %}
+                                        {{ total_items }}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                {% endwith %}
+                            </span>)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if section == 'orders' %} active {% endif %}"
+                           href="{% url 'orders' %}">Заказы</a>
+                    </li>
                 {% endif %}
             </ul>
             <div class="nav-item" style="margin: auto">

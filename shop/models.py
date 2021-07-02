@@ -26,12 +26,10 @@ class Item(models.Model):
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=150, db_index=True, unique=True, verbose_name="Название")
     description = models.TextField(max_length=1000, db_index=True, verbose_name="Описание", blank=True, default="")
-    price = models.FloatField(verbose_name="Цена", default=0.0)
+    price = models.DecimalField(verbose_name="Цена", max_digits=10,  decimal_places=2)
     photo = models.ImageField(verbose_name="Фото", upload_to='items/%Y/%m/%d', blank=True)
     in_stock = models.BooleanField(verbose_name='В продаже', default=True)
     on_delete = models.BooleanField(verbose_name='Пометить на удаление', default=False)
-    # rating = models.FloatField(verbose_name="Рейтинг", default=0.0)
-    # discount = models.IntegerField(default=0)
     detail_url = 'item_detail_url'
     quantity_unit = models.CharField(max_length=2, choices=UNIT_CHOICE, default="шт")
 
@@ -238,58 +236,3 @@ class Favorite(models.Model):
         verbose_name_plural = 'Избранное'
         ordering = ('item', 'create_date')
         unique_together = ('user', 'item')
-
-
-class Cart(models.Model):
-    owner = models.OneToOneField('account.Profile', on_delete=models.CASCADE, unique=True)
-
-    def __str__(self):
-        return f"Корзина {self.owner.username}"
-
-    class Meta:
-        verbose_name_plural = "Корзины"
-        verbose_name = "Корзина"
-
-
-class CartItems(models.Model):
-    order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='cart_item', null=True)
-    item = models.OneToOneField('Item', on_delete=models.CASCADE)
-    price_on_order_date = models.FloatField()
-    quantity = models.FloatField(default=1)
-
-    def __str__(self):
-        return f"{self.order.customer} {self.item} {self.price_on_order_date}"
-
-    class Meta:
-        verbose_name = 'Продукт из корзины'
-        verbose_name_plural = 'Продукты находящиеся в корзинах'
-
-
-class Order(models.Model):
-    customer = models.OneToOneField('account.Profile', verbose_name="Заказчик", on_delete=models.CASCADE,
-                                    related_name="order")
-    created = models.DateTimeField(verbose_name="Созадана", auto_now_add=True)
-    updated = models.DateTimeField(verbose_name="Обновлен", auto_now=True)
-    ordered = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ['-created']
-        verbose_name = "Заказ"
-        verbose_name_plural = "Заказы"
-
-    def __str__(self):
-        return f'Заказ: {self.id} от {self.created}'
-
-    def sum_order_price(self):
-        cart_items = self.cart_item.all()
-        return sum([item.price_on_order_date for item in cart_items])
-
-    def sum_order_price_with_discount(self):
-        cart_items = self.cart_item.all()
-        return sum([item.price_on_order_date - item.price_on_order_date/item.item.discount()*100 for item in cart_items])
-# class OrderStatus(models.Model):
-#     pass
-#
-#
-# class OrderItem(models.Model):
-#     pass
