@@ -1,0 +1,28 @@
+{% load mptt_tags %}
+
+<nav class="navmenu navmenu-default" role="navigation">
+    <div id='cssmenu'>
+    <ul>
+        <li class='has-sub '><a href='#'>Категории</a>
+        <ul>
+        {% recursetree nodes %}
+            
+            {% if not node.is_leaf_node %}
+            <li class='has-sub '><a href='/category/{{ node.code }}/'>{{ node.title }}</a>
+            <ul>            
+                {{ children }}
+            </li>
+            </ul>
+            {% else %}
+            <li class="">
+                <a href="/category/{{ node.code }}/">{{ node.title }}</a>
+            </li>
+            {% endif %}
+            
+        {% endrecursetree %}
+        </ul>
+        </li>        
+    </ul>
+    </div>
+
+</nav>

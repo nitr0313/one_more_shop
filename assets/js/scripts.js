@@ -207,9 +207,14 @@ $(document).ready(function () {
     add_to_favorites();
     get_favorites();
     get_cart_items();
-
+    $('.owl-carousel').owlCarousel({
+        autoWidth:true,
+        items:2,
+        loop:true,
+        margin:10,
+        autoplay:true,
+        autoplayTimeout:3000,
+        autoplayHoverPause:true
+    });
 });
 
-$('.carousel').carousel({
-    interval: 2000
-});

@@ -1,3 +1,5 @@
+import os
+from shop.services import create_categores, create_items, create_specs, set_analogs_and_related
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.db import models
@@ -8,40 +10,76 @@ from django.views.generic.detail import DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView 
 from django.db.models import Q
+from django.contrib import messages
 from .forms import CartAddItemForm
 from .cart import Cart
-from .models import Item, Favorite, ItemRating, SpecItem, User
+from .models import Category, Item, Favorite, ItemRating, SpecItem, SpecValue, User
 from account.models import Profile
 from typing import *
 from decimal import Decimal
+from .utils import Group, XmlParserPRODAT, download_image
 
 
 # Create your views here.
 
 
-class ItemsList(ListView):
-    model = Item
+class HomePage(View):
+    ...
 
     def get_context_data(self, **kwargs):
-        # context = super().get_context_data(**kwargs)
-        context = dict()
-        search_query = self.request.GET.get('search', False)
+        context = super().get_context_data(**kwargs)
+        cats = Category.objects.all()
+        return context
+    
 
-        if search_query:
-            items = Item.objects.all().filter(
+
+class ItemsList(ListView):
+    model = Item
+    paginate_by = 12
+    context_object_name = 'items'
+    queryset = model.objects.all()
+    #.annotate(avg_review=models.Avg('item_rating__rating')).order_by('-avg_review')
+
+    def get_queryset(self):
+        if 'search' in self.request.GET:
+            search_query = self.request.GET.get('search', False)
+            return Item.objects.all().filter(
                 Q(title__icontains=search_query) |
                 Q(description__icontains=search_query) |
                 Q(category__title=search_query),
-            ).annotate(avg_review=models.Avg('item_rating__rating')).order_by(
-                '-avg_review')
-            
-        else:
-            items = Item.objects.all().annotate(avg_review=models.Avg('item_rating__rating')).order_by(
-                '-avg_review')
-            context['top_items'] = items[0:3]
-        context['items'] = items
-        context['section'] = 'home_page'
+            )
+            #.annotate(avg_review=models.Avg('item_rating__rating')).order_by('-avg_review')
+        elif 'cat_code' in self.request.GET:
+            category = self.request.GET.get('cat_code', False)
+            print(category)
+            qs = Item.objects.all().filter(category__code=category
+                )
+                #.annotate(avg_review=models.Avg('item_rating__rating')).order_by('-avg_review')
+            if qs:
+                return qs
+            qs = Item.objects.filter(category__parent__code=category)
+            return qs
 
+        return super().get_queryset()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # context = dict()
+        search_query = self.request.GET.get('search', False)
+
+        # if search_query:
+        #     items = Item.objects.all().filter(
+        #         Q(title__icontains=search_query) |
+        #         Q(description__icontains=search_query) |
+        #         Q(category__title=search_query),
+        #     ).annotate(avg_review=models.Avg('item_rating__rating')).order_by(
+        #         '-avg_review')
+        #     context['items'] = items
+        #     context['is_paginated'] = False
+            
+        context['section'] = 'home_page'
+        context['nodes'] = Category.objects.all()
+        # print(context)
         return context
 
 
@@ -60,15 +98,32 @@ class FavoritesItems(ListView, LoginRequiredMixin):
 class ItemDetail(DetailView):
     model = Item
     # template = 'shop/item_detail.html'
-    context_object_name = 'item'
+    # context_object_name = 'item'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['comments'] = ItemRating.objects.filter(item=context['item'])
-        context['specs'] = SpecItem.objects.filter(item=context['item'])
+        context['comments'] = ItemRating.objects.filter(item=context['object'])
+        context['specs'] = SpecValue.objects.filter(item=context['object']).select_related('spec_item')
         context['section'] = 'detail'
+        print(context)
         return context
 
+
+class CategoryList(View):
+    model = Category
+    context_object_name = 'node'
+    template = 'shop/category_list.html'
+
+    def get(self, request, *args, **kwargs):
+        cat = get_object_or_404(Category, code=kwargs['code'])
+        chield_categories = cat.get_descendants(include_self=True)
+        nodes = Category.objects.filter(parent__in=chield_categories)
+        print(nodes)
+        context = dict(
+            cat=cat,
+            nodes=nodes
+            )
+        return render(request=request, template_name=self.template, context=context)
 
 # Функционал добавление и удаления из избранного
 def add_to_favorites(request):
@@ -145,13 +200,10 @@ def favorites_api(request):
     return JsonResponse(data, safe=False)
 
 
-
-
-@login_required()  # TODO: Переделать так что бы перекидывало на логин при попытке добавить в корзину
+@login_required()
 @require_POST
 def add_to_cart(request):
     cart = Cart(request)
-    print(request.POST)
     if not request.is_ajax():
         id = request.POST.get("id")
         item = get_object_or_404(Item, id=id)
@@ -200,12 +252,12 @@ def cart(request):
         )
         full_price += int(item['quantity']) * item["item"].get_raw_price_with_discount
         print(item)
-    test_item = Item.objects.all().filter(id=4)[0]
+    # test_item = Item.objects.all().filter(id=4)[0]
     con = dict(
         cart=cart,
         section='cart',
         full_coast=full_price,
-        test_item=test_item,
+        # test_item=test_item,
     )
     return render(request, 'shop/cart.html', context=con)
 
@@ -241,6 +293,14 @@ def cart_clear(request):
 
 @login_required()
 def cart_api(request):
+    """[summary]
+
+    Args:
+        request ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """    
     cart = Cart(request)
     data = []
     for item in cart:
@@ -253,3 +313,53 @@ def cart_api(request):
     return JsonResponse(data, safe=False)
 
 
+class UpdateDb(View):
+    context = dict()
+    template = 'shop/update_db.html'
+
+    def get(self, request):        
+        self.context['section'] = 'update_db'
+        return render(request, self.template, context=self.context)
+    
+    def post(self, request, *args, **kwargs):
+        file_name = request.FILES.get('items_db', False)
+        if not file_name:
+            return redirect('home')
+        # fl_xml = 'trash_data\data\data_lite.xml'
+        parser = XmlParserPRODAT(file_name=file_name)
+        print('Запуск парсера', file_name)
+        parser.run()
+        result = parser.get_items()
+        groups = parser.get_groups()
+        specs = parser.get_features()
+        print(f'Результат работы парсера {len(result)=}')
+        create_categores(groups)
+        create_specs(specs)
+        create_items(result)
+        set_analogs_and_related(result)
+        return redirect('home')
+
+
+def update_db(request):
+    """Обновление товаров базе данных из файла PRODAT.xml
+       Returns:
+        [type]: [description]
+    """
+    # if not request.user.is_stuff():
+    #     messages.error(request, 'НЕТ ПРАВ')
+    #     return redirect('home')
+
+    fl_xml = 'trash_data\data\data.xml'
+    parser = XmlParserPRODAT(file_name=fl_xml)
+    parser.run()
+    result = parser.get_items()
+    groups = parser.get_groups()
+    specs = parser.get_features()
+
+    create_categores(groups)
+    create_specs(specs)
+    create_items(result)
+    set_analogs_and_related(result)
+    return redirect('home')
+        
+    

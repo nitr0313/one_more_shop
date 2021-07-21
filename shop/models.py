@@ -1,5 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models.deletion import CASCADE
+from django.db.models.query_utils import Q
+from mptt.fields import TreeForeignKey
 # from django.utils.text import slugify
 from pytils.translit import slugify
 from django.utils.safestring import mark_safe
@@ -7,45 +10,83 @@ from django.urls.base import reverse
 import datetime
 from django.db.models import Sum
 from django.utils import timezone
+from mptt.models import MPTTModel
+import mptt
+from autoslug import AutoSlugField
+
 
 User = get_user_model()
 
-UNIT_CHOICE = (
-    ('шт', 'шт'),
-    ('г', 'грамм'),
-    ('кг', 'килограмм'),
-    ('м', 'метр'),
-    ('см', 'сантиметр'),
-    ('мм', 'милиметр'),
+# UNIT_CHOICE = (
+#     ('шт', 'шт'),
+#     ('г', 'грамм'),
+#     ('кг', 'килограмм'),
+#     ('м', 'метр'),
+#     ('см', 'сантиметр'),
+#     ('мм', 'милиметр'),
 
+# )
+
+UNIT_CHOICE = (
+    ('GRM', 'грамм'),
+    ('KGM', 'килограмм'),
+    ('LTR', 'литр'),
+    ('MMT', 'миллиметр'),
+    ('MTK', 'квадратный метр'),
+    ('MTQ', 'кубический метр'),
+    ('MTR', 'метр'),
+    ('MGM', 'миллиграмм'),
+    ('MLT', 'миллилитр'),
+    ('MMQ', 'миллиметр кубический'),
+    ('PCE', 'штук'),
+    ('DMQ', 'дециметр кубический'),
+    ('CMT', 'сантиметр'),
+    ('NMP', 'упаковка'),
+    ('NBB', 'бобина(бухта)'),
 )
 
 
 class Item(models.Model):
-    slug = models.SlugField(unique=True, verbose_name='URL', allow_unicode=True, blank=True)
-    category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True)
-    title = models.CharField(max_length=150, db_index=True, unique=True, verbose_name="Название")
+    brand = models.CharField(max_length=250, blank=True, default="")
+    code = models.CharField(max_length=10, db_index=True, blank=True)
+    slug = AutoSlugField(populate_from='code')
+    category = TreeForeignKey('Category', related_name='cat', null=True, blank=True, on_delete=models.CASCADE)
+    title = models.CharField(max_length=250, db_index=True, unique=True, verbose_name="Название")
     description = models.TextField(max_length=1000, db_index=True, verbose_name="Описание", blank=True, default="")
     price = models.DecimalField(verbose_name="Цена", max_digits=10,  decimal_places=2)
-    photo = models.ImageField(verbose_name="Фото", upload_to='items/%Y/%m/%d', blank=True)
+    photo = models.ImageField(verbose_name="Фото", upload_to='media/items/%Y/%m/%d', blank=True)
     in_stock = models.BooleanField(verbose_name='В продаже', default=True)
-    on_delete = models.BooleanField(verbose_name='Пометить на удаление', default=False)
+    on_delete = models.BooleanField(verbose_name='Пометка на удаление', default=False)
     detail_url = 'item_detail_url'
-    quantity_unit = models.CharField(max_length=2, choices=UNIT_CHOICE, default="шт")
+    quantity_unit = models.CharField(max_length=3, choices=UNIT_CHOICE, default="шт")
+    quantity_min = models.IntegerField(verbose_name="Минимальное количество заказ")
+    analogs = models.ManyToManyField('Item', verbose_name="Аналоги", related_name='analog')
+    related = models.ManyToManyField('Item', verbose_name="Сопутствующие товары", related_name='related_item')
 
     def __str__(self):
-        return f'{self.id} {self.title} {self.price}'
+        return f'{self.code} {self.title} {self.price}'
+
+    def set_analogs(self, analogs):
+        items = Item.objects.filter(code__in=analogs)
+        self.analogs.add(*items)
+        self.save()
+
+    
+    def set_related(self, related_items):
+        items = Item.objects.filter(code__in=related_items)
+        self.related.add(*items)
+        self.save()
 
     @property
     def category_path(self):
-        cat = self.category.title
-        tmp = self.category
-        path_ls = [tmp, ]
-        while tmp.parent is not None:
-            tmp = tmp.parent
-            path_ls.append(tmp)
-        return path_ls
-
+        cat = self.category
+        path_ls = [cat, ]
+        while cat.parent is not None:
+            cat = cat.parent
+            path_ls.append(cat)
+        print(path_ls)
+        return path_ls[::-1][1:]
+    
     def as_dict(self):
         d = {
             'slug': self.slug,
@@ -55,8 +96,8 @@ class Item(models.Model):
         return d
 
     def save(self, *args, **kwargs):
-        if not self.id or not self.slug:
-            self.slug = slugify(self.title)
+        # if not self.id or not self.slug:
+        #     self.slug = slugify(self.code)
         return super().save(*args, **kwargs)
 
     class Meta:
@@ -132,42 +173,51 @@ class Item(models.Model):
         return ItemRating.objects.filter(item=self).count()
 
 
-class Category(models.Model):
-    title = models.CharField(max_length=50)
-    parent = models.ForeignKey(
-        'Category', on_delete=models.SET_NULL, null=True, blank=True)
-    item_spec = models.ManyToManyField('SpecItem', related_name='item_cat', blank=True)
+class Category(MPTTModel):
+    title = models.CharField(max_length=150)
+    code = models.CharField(max_length=15, unique=True, db_index=True)
+    slug = AutoSlugField(populate_from='code', always_update=True, unique=True)
+    parent = TreeForeignKey(
+        'self', null=True, blank=True, related_name='children', on_delete=models.CASCADE)
+    
+    class Meta:
+        verbose_name = 'Категория товаров'
+        verbose_name_plural = 'Категории товаров'
+    class MPTTMeta:
+        level_attr = 'mptt_level'
+        order_insertion_by=['title']
 
     def __str__(self):
         return self.title
 
-    class Meta:
-        verbose_name = 'Категория товаров'
-        verbose_name_plural = 'Категории товаров'
+# mptt.register(Category, order_insertion_by=['name'])
+
 
 
 class SpecItem(models.Model):
     """
     Характеристики товара
     """
-    item = models.ForeignKey('Item', on_delete=models.CASCADE, null=True, related_name='specs')
+    code = models.CharField(max_length=20, verbose_name="Код характеристики", unique=True)
     title = models.CharField(max_length=200, verbose_name='Наименование арактеристики, (и единица измерения)')
-    value = models.ForeignKey('SpecValue', verbose_name='Значение характеристики', on_delete=models.CASCADE, null=True)
+    # value = models.ForeignKey('SpecValue', verbose_name='Значение характеристики', on_delete=models.CASCADE, null=True)
+    uom = models.CharField(max_length=20, verbose_name='Еденицы измерения', null=True)
 
     def __str__(self):
-        return f'{self.title} - {self.value}'
+        return f'{self.title}'
 
     class Meta:
         verbose_name = 'Характеристика'
         verbose_name_plural = 'Характеристики товара'
-        unique_together = ('title', 'value')
 
 
 class SpecValue(models.Model):
     """
     Занчение характеристики
     """
-    value = models.CharField(max_length=50)
+    item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name='spec_value')
+    spec_item = models.ForeignKey('SpecItem', on_delete=models.CASCADE, related_name='value')
+    value = models.CharField(max_length=150, verbose_name="Значение характеристики")
 
     def __str__(self):
         return self.value

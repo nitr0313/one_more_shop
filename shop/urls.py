@@ -16,7 +16,9 @@ urlpatterns = [
     path('cart_clear/', cart_clear, name='cart_clear'),
     path('add_to_cart/', add_to_cart, name='add_to_cart'),
     path('remove_from_cart/', remove_from_cart, name='remove_from_cart'),
+    path('category/<str:code>/', CategoryList.as_view(), name='category_list'),
     path('v1/api/cart/', cart_api),
+    path('update_db/', UpdateDb.as_view(), name='update_db')
 
 ]
 if settings.DEBUG:

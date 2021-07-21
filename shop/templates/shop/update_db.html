@@ -1,0 +1,26 @@
+{% extends "_base.html" %}
+{% load static %}
+
+{% block title %}
+    Главная страница
+{% endblock %}
+
+{% block content %}
+    <form action='{{ update_db }}' method='POST' enctype="multipart/form-data">
+    <div class="form-group">
+        <div class="form-file">
+            <input type="file" name='items_db' class="form-file-input" id="customFile">
+            <label class="form-file-label" for="customFile">
+                <span class="form-file-text">Choose file...</span>
+                <span class="form-file-button">Browse</span>
+            </label>
+        </div>
+        </div>
+        {% csrf_token %}
+        <button type='submit'>Обновить базу</button>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/scripts.js' %}"></script>
+{% endblock %}

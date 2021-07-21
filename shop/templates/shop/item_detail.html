@@ -5,42 +5,70 @@
     Описание {{ admin_object.title }}
 {% endblock %}
 
+{% block meta %}
+
+{% endblock meta %}
+
 {% block content %}
-    <h1 class="mt-5">{{ item.title }}</h1>
+<div class="row">
+        <div class="col-xs-12" style="width: 100%;">
+            <ul class="list-inline">
+                    <li class="list-group-item" style="float:left"><a href="{% url 'home' %}" itemprop="item" title="Каталог товаров"><span itemprop="name">Каталог товаров</span>
+                        <meta itemprop="position" content="2">
+                    </a></li>
+                {% for cat in object.category_path %}
+                
+                    <li class="list-group-item" style="float:left"><a href="{% url 'home' %}?cat_code={{ cat.code }}" itemprop="item" title="{{ cat.title }}"><span itemprop="name">{{ cat.title }}</span>
+                        <meta itemprop="position" content="2">
+                    </a></li>
+                {% endfor %}
+
+                    {% comment %} <li itemscope="" itemprop="itemListElement" itemtype="http://schema.org/ListItem"><a href="/search.htm?m=1&amp;N=20000010" itemprop="item" title="Генераторы электроэнергии и элементы питания"><span itemprop="name">Генераторы электроэнергии и элементы питания</span>
+                        <meta itemprop="position" content="2">
+                    </a></li> {% endcomment %}
+            </ul>
+        </div>
+    </div>
+    <h1 class="mt-5">{{ object.title }}</h1>
     <div class="row w-150">
         <div class="col">
-            <img src="{{ MEDIA_URL }}{{ item.get_photo_url }}" style="max-width: 250px" alt="{{ item.title }}">
+            <img src="{{ MEDIA_URL }}{{ object.get_photo_url }}" style="max-width: 250px" alt="{{ object.title }}">
         </div>
         <div class="col">
             <div class="row" style="">
                 <h4>Описание: </h4>
                 <ul class="mt-3">
                     <li>
-                        {{ item.description }}
+                    Брэнд: {{ object.brand }}
                     </li>
-                    <li>Цена: {{ item.get_raw_price }}<br>
-                        {% if  item.discount %}
-                            Скидка: -{{ item.discount.value }}%<br>
-                            Скидка действительна до: {{ item.discount.expire_date }}<br>
-                            Цена со скидкой:<b> {{ item.get_price_with_discount }} </b>
+                    {% if object.description %}
+                    <li>
+                        {{ object.description }}
+                    </li>
+                    {% endif %}
+                    <li>Цена: {{ object.get_raw_price }}<br>
+                        {% if  object.discount %}
+                            Скидка: -{{ object.discount.value }}%<br>
+                            Скидка действительна до: {{ object.discount.expire_date }}<br>
+                            Цена со скидкой:<b> {{ object.get_price_with_discount }} </b>
                         {% endif %}
 
 
                     </li>
-                    <li>
-                        Средний рейтинг: {{ item.get_rating }}
+                    {% comment %} <li>
+                        Средний рейтинг: {{ object.get_rating }}
                     </li>
                     <li>
-                        Заказов: {{ item.get_rating_count }}
-                    </li>
+                        Заказов: {{ object.get_rating_count }}
+                    </li> {% endcomment %}
                     <li>
                         Добавить в избранное:
                         {% include 'shop/includes/favorites.html' %}
-                    </li>
+                    </li><br>
                     Характеристики:
                     {% for spec in specs %}
                         <li>
-                            {{ spec.title }} - {{ spec.value }}
+                            {{ spec.spec_item.title }} - {{ spec.value }} {{ spec.spec_item.uom }}
                         </li>
                     {% endfor %}
 
@@ -49,6 +77,7 @@
 
         </div>
     </div>
+
 
     {% if request.user.is_authenticated %}
         <div class="row m-5">
@@ -63,7 +92,7 @@
     {% endif %}
             <a class="btn btn-primary m-3" data-toggle="collapse" href="#collapseReviews" role="button"
                aria-expanded="false" aria-controls="collapseReviews">
-                Отзывов: {{ item.get_rating_count }}
+                Отзывов: {{ object.get_rating_count }}
             </a>
         </div>
 
@@ -87,13 +116,14 @@
                 Отзывов пока нет
             </div>
         {% endfor %}
-
-
     </div>
-
+     {% comment %} Аналоги и сопуствующие товары  {% endcomment %}
+    {% include "shop/includes/analog_carusel.html" %}
 </div>
 {% endblock %}
 
 {% block scripts %}
+    
     <script src="{% static 'js/scripts.js' %}"></script>
+    
 {% endblock %}

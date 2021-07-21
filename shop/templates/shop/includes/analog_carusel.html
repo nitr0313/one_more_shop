@@ -1,0 +1,45 @@
+{% if object.analogs.count %}
+<h3> Аналоги </h3>
+<div class="owl-carousel owl-theme">
+    {% for analog in object.analogs.all %}
+        <div class="card" style="width: 10rem;">
+            <img
+                class="card-img-top"
+                src="{{ analog.get_photo_url }}"
+                alt="{{ analog.title }}"
+                height="90px"
+                style="object-fit: scale-down;">
+            
+            <div class="card-body">
+                <p class="card-text" style="font-size: x-small;">
+                   <a href="{{ analog.get_detail_url }}"> {{ analog.title | truncatechars:50}} </a>
+                </p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+{% if object.related.count %}
+<h3> Вместе с данным товаром покупатели просматривали следующие позиции </h3>
+<div class="owl-carousel owl-theme">
+    {% for related_item in object.related.all %}
+        <div class="card" style="width: 10rem;">
+            <img
+                class="card-img-top"
+                src="{{ related_item.get_photo_url }}"
+                alt="{{ related_item.title }}"
+                height="90px"
+                style="object-fit: scale-down;">
+            <div class="card-body">
+                <p class="card-text" style="font-size: x-small;">
+                <a href="{{ related_item.get_detail_url }}">
+                    {{ related_item.title }}
+                </a>
+                </p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
