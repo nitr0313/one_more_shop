@@ -1,5 +1,6 @@
 import os
-from shop.services import create_categores, create_items, create_specs, set_analogs_and_related
+from shop.services import add_item_specs, create_categores, create_items, create_specs, set_analogs_and_related, update_prices
+
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.db import models
@@ -11,13 +12,18 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView 
 from django.db.models import Q
 from django.contrib import messages
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+
 from .forms import CartAddItemForm
 from .cart import Cart
 from .models import Category, Item, Favorite, ItemRating, SpecItem, SpecValue, User
 from account.models import Profile
 from typing import *
 from decimal import Decimal
-from .utils import Group, XmlParserPRODAT, download_image
+from .utils import Group, download_image, get_xml_parser, get_xml_parser2
+
 
 
 # Create your views here.
@@ -322,44 +328,30 @@ class UpdateDb(View):
         return render(request, self.template, context=self.context)
     
     def post(self, request, *args, **kwargs):
-        file_name = request.FILES.get('items_db', False)
-        if not file_name:
+        data_file = request.FILES.get('items_db', False)
+        if not data_file:
             return redirect('home')
-        # fl_xml = 'trash_data\data\data_lite.xml'
-        parser = XmlParserPRODAT(file_name=file_name)
-        print('Запуск парсера', file_name)
+        path = default_storage.save(f"tmp/{data_file}", ContentFile(data_file.read()))
+        file_name = os.path.join(settings.MEDIA_ROOT, path)
+        type_xml, parser = get_xml_parser2(file_name)
+        print(type_xml, parser)
+        if type_xml is None or parser is None:
+            messages.error(request, 'Ошибка загрузки - возможно не верный файл')
+            return redirect('home')
+
         parser.run()
-        result = parser.get_items()
-        groups = parser.get_groups()
-        specs = parser.get_features()
-        print(f'Результат работы парсера {len(result)=}')
-        create_categores(groups)
-        create_specs(specs)
-        create_items(result)
-        set_analogs_and_related(result)
-        return redirect('home')
-
-
-def update_db(request):
-    """Обновление товаров базе данных из файла PRODAT.xml
-       Returns:
-        [type]: [description]
-    """
-    # if not request.user.is_stuff():
-    #     messages.error(request, 'НЕТ ПРАВ')
-    #     return redirect('home')
-
-    fl_xml = 'trash_data\data\data.xml'
-    parser = XmlParserPRODAT(file_name=fl_xml)
-    parser.run()
-    result = parser.get_items()
-    groups = parser.get_groups()
-    specs = parser.get_features()
-
-    create_categores(groups)
-    create_specs(specs)
-    create_items(result)
-    set_analogs_and_related(result)
-    return redirect('home')
-        
+        result = parser.get_result()
+        if type_xml == 'PRODAT':
+            # result = parser.get_result()
+            groups = result['groups']
+            features = result['features']
+            create_categores(groups)
+            create_specs(features)
+            create_items(result['items'])
+            add_item_specs(result['items'])
+            set_analogs_and_related(result['items'])
+        elif type_xml == 'PRICAT':
+            # result = parser.get_items()
+            update_prices(result['prices'])
+        return redirect('home')        
     

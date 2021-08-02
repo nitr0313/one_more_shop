@@ -1,11 +1,16 @@
 from copy import deepcopy
-from lxml.etree import iterparse
+import decimal
+from lxml.etree import LxmlError, iterparse, LxmlSyntaxError
 from pprint import pprint
 import json
 from dataclasses import dataclass
 import requests
 import os
-from datetime import datetime
+from datetime import datetime, time
+from abc import ABC
+from decimal import Decimal
+from typing import Tuple
+
 
 @dataclass
 class Group:
@@ -13,8 +18,176 @@ class Group:
     name: str
     parent_code: str = None
 
+@dataclass(frozen=False)
+class ItemPrice:
+    SenderPrdCode: str
+    ProductName: str
+    ItemsPerUnit: int
+    UOM: str
+    QTY: int
+    Price2: Decimal
+    RetailPrice: Decimal
+    QtyLots: list = lambda: list()
+    _pk: int = None
 
-class XmlParserPRODAT:
+    def __post_init__(self):
+        object.__setattr__(self, "ItemsPerUnit", int(self.ItemsPerUnit))
+        object.__setattr__(self, "QTY", Decimal(self.QTY))
+        object.__setattr__(self, "Price2", Decimal(self.Price2))
+        object.__setattr__(self, "RetailPrice", Decimal(self.RetailPrice))
+        if self.QtyLots is not None:
+            object.__setattr__(self, "QtyLots", self.QtyLots.split(";"))
+    
+    @property
+    def pk(self) -> int:
+        return self._pk
+
+    @pk.setter
+    def pk(self, obj: int) -> None:
+        self._pk = int(obj)
+
+    @property
+    def code(self) -> str:
+        return self.SenderPrdCode
+    
+    @property
+    def price(self) -> Decimal:
+        return self.Price2
+
+    @property
+    def base_price(self) -> Decimal:
+        return self.RetailPrice 
+
+    @property
+    def quantity_lots(self) -> list:
+        return self.QtyLots
+
+    @property
+    def quantity_min(self) -> int:
+        return self.ItemsPerUnit
+
+    @property
+    def quantity_unit(self) -> str:
+        return self.UOM
+
+    @property
+    def quantity(self) -> str:
+        return self.QTY
+
+
+    def as_dict(self) -> dict:
+        return dict(
+            code = self.SenderPrdCode,
+            title = self.ProductName,
+            quantity_min = int(self.ItemsPerUnit),
+            quantity_unit = self.UOM,
+            quantity = int(self.QTY),
+            price = Decimal(self.Price2),
+            base_price = Decimal(self.RetailPrice),
+            quantity_lots = self.QtyLots,
+        )
+
+
+class RSXmlParser(ABC):
+    
+    def __init__(self, file_name) -> None:
+        self.file_name = file_name
+        self.__context = None
+        self.__result = dict()
+
+    def get_items(self) -> dict:
+        return self.__result
+
+    def get_result(self) -> dict:
+        return self.__result
+
+    def run(self):
+        self.__context = self.__create_context()
+        return self.__context
+    
+    def __create_context(self):
+        return iterparse(self.file_name, tag='DocDetail', events = ('end', ))
+
+    def _fast_iter(self, context, process, *args, **kwargs):
+        """
+        http://lxml.de/parsing.html#modifying-the-tree
+        Based on Liza Daly's fast_iter
+        http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
+        See also http://effbot.org/zone/element-iterparse.htm
+        """
+        for event, elem in context:
+            process(elem, *args, **kwargs)
+            elem.clear()
+            for ancestor in elem.xpath('ancestor-or-self::*'):
+                while ancestor.getprevious() is not None:
+                    del ancestor.getparent()[0]
+        del context
+
+    def __process_element(self, elem):
+        raise NotImplementedError
+
+
+class RSXmlParserPricat(RSXmlParser):
+    """
+        <EAN />
+        <SenderPrdCode>1401410</SenderPrdCode>
+        <ReceiverPrdCode />
+        <ProductName>Кабель КПСЭнг(А)-FRHF 1х2х0.75 300В (бухта) (м) ИВКЗ 00-00014448</ProductName>
+        <UOM>MTR</UOM>
+        <AnalitCat>НОВ</AnalitCat>
+        <ItemsPerUnit>1</ItemsPerUnit>
+        <QTY>7699.0000</QTY>
+        <SumQTY>7699.0000</SumQTY>
+        <ProductStatus>Активно</ProductStatus>
+        <Brand>ИВКЗ</Brand>
+
+        <Price2>27.00</Price2>
+        <CustPrice>22.50</CustPrice>
+        <RetailPrice>27.00</RetailPrice>
+        <RetailCurrency>rub</RetailCurrency>
+        
+        <VendorProdNum>00-00014448</VendorProdNum>
+        <SupOnhandDetail />
+        <Multiplicity>1</Multiplicity>
+        <QtyLots>15;29;55;7600</QtyLots>
+        <ItemId>2756322</ItemId>
+
+    Args:
+        RSXmlParser ([type]): [description]
+    """
+
+    default_data = dict(
+        SenderPrdCode = "",
+        ProductName = "",
+        ItemsPerUnit = "",
+        UOM = "",
+        QTY = "",
+        Price2 = "",
+        RetailPrice = "",
+        QtyLots = "",
+    )
+    def __init__(self, file_name):
+        super().__init__(file_name)
+        self.__result = dict()
+
+    def run(self):
+        self.__context = super().run()
+        super()._fast_iter(self.__context, process=self.__process_element)
+
+    def __process_element(self, elem):
+        self.elem_data = deepcopy(self.default_data)
+        for child in elem:
+            if child.tag in self.elem_data:
+                self.elem_data[child.tag] = child.text
+        self.__result[self.elem_data["SenderPrdCode"]] = ItemPrice(**self.elem_data)
+    
+    def get_result(self) -> dict:
+        return dict(
+            prices=self.__result
+        )
+
+
+class RSXmlParserPRODAT(RSXmlParser):
     """Парсер Файла PRODAT от Рyсского света
 
     Returns:
@@ -41,41 +214,14 @@ class XmlParserPRODAT:
     )
 
     def __init__(self, file_name) -> None:
-        self.file_name = file_name
-        self.__context = None
+        super().__init__(file_name=file_name)
         self.__result = dict()
         self.__groups = dict() # {'g_code':'ProdGroup'}
         self.__features = dict()  #  {'FeatureCode':{FeatureName:'f_name',FeatureUom: 'f_uom',FeatureValue:'f_value' }}
 
-    def get_items(self) -> dict:
-
-        return self.__result
-
-    def get_groups(self) -> dict:
-        """[summary]
-
-        Returns:
-            dict: {GRoupCode:Group(dataclass (code: str, name: str, parent: Group)), ...}}
-        """
-        return self.__groups
-    
-    def get_features(self):
-        """[summary]
-
-        Returns:
-            dict: {'FeatureCode':
-                    {'FeatureCode':code,
-                    'FeatureName':name,
-                    'FeatureUom':Uom,
-                    'FeatureValue':value},
-                    ...
-                }
-        """
-        return self.__features
-
     def run(self):
-        self.__context = self.__create_context()
-        self.__fast_iter(self.__context)
+        self.__context = super().run()
+        super()._fast_iter(self.__context, process=self.__process_element)
         self.__parse_groups_and_features()
 
     def __parse_groups_and_features(self):
@@ -92,10 +238,8 @@ class XmlParserPRODAT:
             for feauter in features:
                 self.__features[feauter['FeatureCode']] = feauter
 
-    def __create_context(self):
-        return iterparse(self.file_name, tag='DocDetail', events = ('end', ))
-
     def __process_element(self, elem):
+        
         self.elem_data = deepcopy(self.default_data)
         for child in elem:
             if child.tag in self.elem_data and child.tag != 'Dimension':
@@ -113,8 +257,7 @@ class XmlParserPRODAT:
             elif child.tag.startswith('FeatureETIMDetails'):
                 for ch in child:
                     self.elem_data['Features'].append(
-                        dict( ((c.tag, c.text) for c in ch) )
-                        )
+                        dict( ((c.tag, c.text) for c in ch) ))
             elif child.tag == 'Image':
                 if not len(child):
                     continue
@@ -125,29 +268,17 @@ class XmlParserPRODAT:
                 self.elem_data['Video'] = child[0].text
         self.__result[self.elem_data["SenderPrdCode"]] = deepcopy(self.elem_data)
 
-    def __fast_iter(self, context, *args, **kwargs):
-        """
-        http://lxml.de/parsing.html#modifying-the-tree
-        Based on Liza Daly's fast_iter
-        http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
-        See also http://effbot.org/zone/element-iterparse.htm
-        """
-        for event, elem in context:
-
-            self.__process_element(elem, *args, **kwargs)
-            elem.clear()
-            for ancestor in elem.xpath('ancestor-or-self::*'):
-                while ancestor.getprevious() is not None:
-                    del ancestor.getparent()[0]
-        del context
+    def get_result(self) -> dict:
+        return dict(
+            groups=self.__groups,
+            items=self.__result,
+            features=self.__features
+        )
 
 
 def download_image(url, path):
     if not url or url is None:
         return
-    resp = requests.get(url)
-    if resp.status_code != 200:
-        return 
     if not isinstance(path, str):
         try:
             path = path()
@@ -159,10 +290,95 @@ def download_image(url, path):
         ...
     except Exception as e:
         print(f"Другая ошибка {e}")
+
     full_path = os.path.join(path, url.split('/')[-1])
+    if os.path.isfile(full_path) and os.path.exists(full_path):
+        # print(f'Картинка уже загружена: {full_path}')
+        return full_path
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        return 
     with open(full_path, 'wb') as fl:
         fl.write(resp.content)
     return full_path
+
+
+def timeit(foo):
+    def wrapped(*args, **kwargs):
+        start = datetime.now()
+        res = foo(*args, **kwargs)
+        print(f'time of execute {foo} = {datetime.now() - start}')
+        return res
+    return wrapped
+
+
+@timeit
+def get_xml_parser(data_file: str):
+    """
+    Выбирает парсер для конкретного файла
+
+
+    Args:
+        data_file (str): Файл в формате XML
+
+    Returns:
+        [tuple]: кортеж из двух значений - первое тип докуммента, второе парсер для его обработки
+    """
+    xml_types = dict(
+        PRODAT=RSXmlParserPRODAT,
+        PRICAT=RSXmlParserPricat
+    )
+    try:
+        context = list(iterparse(data_file, tag='DocType', events = ('end', )))
+        xml_type = context[0][1].text
+        xml_parser = xml_types.get(xml_type, None)
+        return xml_type, xml_parser(file_name=data_file)
+    except FileNotFoundError:
+        print(f'Файл {data_file} не найден')
+    except LxmlSyntaxError:
+        print(f'Ошибка синтаксиса xml, не тот файл')
+    except (StopIteration, IndexError, TypeError) as e:
+        print(f'Значение не найдено, не тот файл {e}')
+    except Exception as e:
+        print(f'Не предвиденная ошибка {e}')
+    return None, None
+
+
+@timeit
+def get_xml_parser2(data_file: str):
+    """
+    Выбирает парсер для конкретного файла
+
+
+    Args:
+        data_file (str): Файл в формате XML
+
+    Returns:
+        [tuple]: кортеж из двух значений - первое тип докуммента, второе парсер для его обработки
+    """
+    xml_types = dict(
+        PRODAT=RSXmlParserPRODAT,
+        PRICAT=RSXmlParserPricat
+    )
+    try:
+        index = 0
+        for line in open(data_file, 'r'):
+            # line = line.decode("utf-8")
+            if 'DocType' in line:
+                break
+            if index > 5:
+                raise StopIteration
+            index += 1
+        xml_type: str = line.strip()[9:-10]
+        xml_parser = xml_types.get(xml_type, None)
+        return xml_type, xml_parser(file_name=data_file)
+    except FileNotFoundError:
+        print(f'Файл {data_file} не найден')
+    except (StopIteration, IndexError, TypeError) as e:
+        print(f'Значение не найдено, не тот файл {e}')
+    except Exception as e:
+        print(f'Не предвиденная ошибка {e}')
+    return None, None
 
 
 def create_path():
@@ -177,7 +393,11 @@ if __name__ == '__main__':
     # print(result)
     # exit()
     fl_xml = 'trash_data\\data\\data.xml'
-    parser = XmlParserPRODAT(fl_xml)
+    print(get_xml_parser2(fl_xml))
+    fl_xml = 'trash_data\\data\\pricat_.xml'
+    print(get_xml_parser2(fl_xml))
+    exit()
+    parser = RSXmlParserPRODAT(fl_xml)
     parser.run()
     res = parser.get_items()
     groups = parser.get_groups()
