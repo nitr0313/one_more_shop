@@ -1,17 +1,19 @@
+import datetime
+import json
+
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.deletion import CASCADE
 from django.db.models.query_utils import Q
-from mptt.fields import TreeForeignKey
-# from django.utils.text import slugify
-from pytils.translit import slugify
 from django.utils.safestring import mark_safe
 from django.urls.base import reverse
-import datetime
 from django.db.models import Sum
 from django.utils import timezone
+
+from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
 import mptt
+from pytils.translit import slugify
 from autoslug import AutoSlugField
 
 
@@ -54,24 +56,34 @@ class Item(models.Model):
     title = models.CharField(max_length=250, db_index=True, unique=True, verbose_name="Название")
     description = models.TextField(max_length=1000, db_index=True, verbose_name="Описание", blank=True, default="")
     price = models.DecimalField(verbose_name="Цена", max_digits=10,  decimal_places=2)
+    base_price = models.DecimalField(verbose_name="Базоваяя цена", max_digits=10,  decimal_places=2)
     photo = models.ImageField(verbose_name="Фото", upload_to='media/items/%Y/%m/%d', blank=True)
     in_stock = models.BooleanField(verbose_name='В продаже', default=True)
     on_delete = models.BooleanField(verbose_name='Пометка на удаление', default=False)
     detail_url = 'item_detail_url'
-    quantity_unit = models.CharField(max_length=3, choices=UNIT_CHOICE, default="шт")
+    quantity_unit = models.CharField(max_length=3, choices=UNIT_CHOICE, default="PCE")
     quantity_min = models.IntegerField(verbose_name="Минимальное количество заказ")
+    quantity = models.IntegerField(verbose_name="Остаток на складе", default=0)
+    quantity_lots = models.CharField(max_length=250, verbose_name="Остаток на складе: размеры остатков", default='')
     analogs = models.ManyToManyField('Item', verbose_name="Аналоги", related_name='analog')
     related = models.ManyToManyField('Item', verbose_name="Сопутствующие товары", related_name='related_item')
 
     def __str__(self):
         return f'{self.code} {self.title} {self.price}'
 
+    def get_quantity_lots(self):
+        return json.loads(self.quantity_lots)
+
+    def set_quantity_lots(self, obj):
+        if obj is None:
+            self.quantity_lots = ''
+        self.quantity_lots = json.dumps(obj)
+
     def set_analogs(self, analogs):
         items = Item.objects.filter(code__in=analogs)
         self.analogs.add(*items)
         self.save()
 
-    
     def set_related(self, related_items):
         items = Item.objects.filter(code__in=related_items)
         self.related.add(*items)
@@ -217,7 +229,7 @@ class SpecValue(models.Model):
     """
     item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name='spec_value')
     spec_item = models.ForeignKey('SpecItem', on_delete=models.CASCADE, related_name='value')
-    value = models.CharField(max_length=150, verbose_name="Значение характеристики")
+    value = models.CharField(max_length=150, verbose_name="Значение характеристики", null=True)
 
     def __str__(self):
         return self.value
@@ -225,6 +237,7 @@ class SpecValue(models.Model):
     class Meta:
         verbose_name = "Значение характеристики"
         verbose_name_plural = "Значения характеристик"
+        unique_together = ('spec_item', 'item')
 
 
 class Discount(models.Model):
