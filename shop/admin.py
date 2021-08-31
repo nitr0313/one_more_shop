@@ -62,7 +62,11 @@ class SpecValueInLine(admin.TabularInline):
 
 @register(Item)
 class ItemAdmin(admin.ModelAdmin):
-    fields = ('photo_tag', 'slug', 'photo', 'brand', 'category', 'title', 'description', 'quantity_unit', 'price', 'in_stock', 'on_delete', 'analogs', 'related')
+    fields = ('photo_tag', 'slug', 'photo',
+    'brand', 'category', 'title', 'description',
+    'quantity_unit', 'quantity_min','price', 'base_price',
+    'in_stock', 'on_delete', 'analogs',
+    'related')
     list_display = ('photo_tag', 'slug', 'title', 'quantity_unit', 'price', 'in_stock', 'on_delete')
     readonly_fields = ['photo_tag', 'slug']
     inlines = [SpecValueInLine, ItemRatingInLine]
