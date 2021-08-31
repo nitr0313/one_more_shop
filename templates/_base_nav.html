@@ -1,11 +1,14 @@
-<div class="navbar navbar-expand-lg navbar-grey"> <!-- style="background-color:#e3f2fd;"> -->
-    <div class="container">
+<nav class="navbar navbar-expand-lg navbar-light bg-gray"> <!-- style="background-color:#e3f2fd;"> -->
+{#    <div class="container">#}
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo01"
                 aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
             {#        <a class="navbar-brand" href="{% url "shop:home" %}">HandMade Gifts</a>#}
+{#        <div class="nav-item dropdown">#}
+{#            {% include 'shop/includes/cat_bar.html' %}#}
+{#        </div>#}
             <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
                 <li class="nav-item {% if section == 'home_page' %} active {% endif %}">
                     <a class="nav-link" href="{% url "home" %}">Домашня старица<span
@@ -41,7 +44,7 @@
                 <form class="form-inline my-2 my-lg-0" action="{% url 'home' %} ">
                     <div class="input-group mb-3 mt-2">
                     <input class="form-control" type="search" name="search" placeholder="Поиск" aria-label="Search"
-                            aria-describedby="search_btn" id="search_btn" style="">
+                            aria-describedby="search_btn" style="">
                     <div class="input-group-append mt-1" id="search_group" style="">
                         <button class="btn btn-sm btn-outline-success" type="submit" id="search_btn" style="">
                             <i class="fa fa-search" aria-hidden="true"></i>
@@ -88,5 +91,5 @@
             </div>
 
         </div>
-    </div>
+{#    </div>#}
     </nav>

@@ -13,6 +13,7 @@
     {% comment %} <link rel="stylesheet" href="{% static 'css/stepper.css' %}"> {% endcomment %}
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"
           integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <script src="https://kit.fontawesome.com/b0911ae351.js" crossorigin="anonymous"></script>
 
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'ico/apple-touch-icon.png' %}">
@@ -22,8 +23,10 @@
     <link rel="mask-icon" href="{% static 'ico/safari-pinned-tab.svg' %}" color="#5bbad5">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
-    <link rel="stylesheet" href="{% static 'css/cat_bar.css' %}">
     <link rel="stylesheet" href="{% static 'css/owl.carousel.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cat_bar.css' %}">
+    <script src='{% static 'js/modernizr.custom.js' %}'></script>
+    
     {% block meta %}
 
     {% endblock meta %}
@@ -32,15 +35,16 @@
     {% endblock %}</title>
 </head>
 <body style='background-image: url("{{ MEDIA_URL }}/media/bg-light-4867.png")'>
-<nav>
-    {% block base_nav_bar %}
 
-        {% include "_base_nav.html" %}
+{% block base_nav_bar %}
+    {% include "_base_nav.html" %}
+{% endblock %}
 
-    {% endblock %}
+<nav class="navbar">
+    {% if nodes %}
+        {% include 'shop/includes/cat_bar.html' %}
+    {% endif %}
 </nav>
-
-
 
 {% block base_content %}
     {% comment %} {% if not request.user.is_authenticated %}
@@ -87,24 +91,21 @@
     {% endif %}
 {% endblock base_content %}
 
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+    {#<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>#}
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+            crossorigin="anonymous"></script>
+    <script src="{% static 'js/owl.carousel.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.js' %}"></script>
+    <script src="{% static 'js/placeholder.js' %}"></script>
+    <script src="{% static 'js/jquery.dlmenu.js' %}"></script>
 
-
-{% include "includes/footer.html" %}
-
-
-
-
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"
-        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-        crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-        crossorigin="anonymous"></script>
-<script src="{% static 'js/owl.carousel.min.js' %}"></script>
-<script src="{% static 'js/bootstrap.js' %}"></script>
-<script src="{% static 'js/placeholder.js' %}"></script>
 {% block scripts %}
 
 {% endblock %}
+    {% include "includes/footer.html" %}
 </body>
 </html>
