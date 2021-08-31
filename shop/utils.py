@@ -1,6 +1,6 @@
 from copy import deepcopy
 import decimal
-from lxml.etree import LxmlError, iterparse, LxmlSyntaxError
+from lxml.etree import LxmlError, iterparse, LxmlSyntaxError, parse
 from pprint import pprint
 import json
 from dataclasses import dataclass
@@ -10,13 +10,18 @@ from datetime import datetime, time
 from abc import ABC
 from decimal import Decimal
 from typing import Tuple
+import csv
 
 
 @dataclass
 class Group:
     code: str
-    name: str
+    title: str
     parent_code: str = None
+    etim: str = None
+
+    def __hash__(self) -> int:
+        return int(self.code)
 
 @dataclass(frozen=False)
 class ItemPrice:
@@ -87,6 +92,57 @@ class ItemPrice:
             quantity_lots = self.QtyLots,
         )
 
+
+class CsvParser:
+
+    def __init__(self, file_name) -> None:
+        self.file_name = file_name
+        self.lvl0 = set()
+        self.lvl1 = set()
+        self.lvl2 = set()
+        self.lvl3 = set()
+        self.lvl4 = set()
+
+    def run(self):
+        with open(self.file_name, 'r', newline='', encoding='1251') as fl:
+            csv_d = csv.DictReader(fl,delimiter=';')
+            for line in csv_d.reader:
+                # print(line) # ['2', 'Электроустановочные изделия','24', 'Электроустановочные устройства различного назначения', '426', '', '', '', '', 'EC002247', 'Элемент программы для людей с ограниченными возможностями для электроустановочных устройств']
+                self.processing(line)
+
+    def processing(self, line):
+        lvl0 = line[0:2] # '2', 'Электроустановочные изделия'
+        lvl1 = line[2:4] # '24', 'Электроустановочные устройства различного назначения'
+        lvl2 = line[4:6] # '426', ''
+        lvl3 = line[6:8] # '', ''
+        lvl4 = line[8:] # '', 'EC002247', 'Элемент программы для людей с ограниченными возможностями для электроустановочных устройств'
+        etim = None
+        parent_code = None
+        for elem, lvl in zip((lvl0, lvl1, lvl2, lvl3), (self.lvl0, self.lvl1, self.lvl2, self.lvl3)):
+            if elem[1] == '':                
+                etim = lvl4[-2]
+                title = lvl4[-1]
+                lvl4 = []
+                lvl.add(Group(code=elem[0], title=title, parent_code=parent_code, etim=etim))
+                break
+            lvl.add(Group(code=elem[0], title=elem[1], parent_code=parent_code, etim=etim))
+            parent_code = elem[0]
+        if lvl4:
+            code = lvl4[-3]
+            etim = lvl4[-2]
+            title = lvl4[-1]
+            self.lvl4.add(Group(code=code, title=title, parent_code=parent_code, etim=etim))
+
+    
+    def get_result(self):
+        result = dict(
+            lvl0=self.lvl0,
+            lvl1=self.lvl1,
+            lvl2=self.lvl2,
+            lvl3=self.lvl3,
+            lvl4=self.lvl4,
+        )
+        return result
 
 class RSXmlParser(ABC):
     
@@ -226,10 +282,10 @@ class RSXmlParserPRODAT(RSXmlParser):
 
     def __parse_groups_and_features(self):
         for v in self.__result.values():
-            group = Group(code=v.get('ParentProdCode'), name=v.get('ParentProdGroup'))
+            group = Group(code=v.get('ParentProdCode'), title=v.get('ParentProdGroup'))
             child_group = Group(
                 code=v.get('ProductCode'),
-                name=v.get('ProductGroup'),
+                title=v.get('ProductGroup'),
                 parent_code=group.code
                 )
             self.__groups[group.code] = group
@@ -345,21 +401,22 @@ def get_xml_parser(data_file: str):
 
 
 @timeit
-def get_xml_parser2(data_file: str):
+def get_parser(data_file: str):
     """
     Выбирает парсер для конкретного файла
-
-
     Args:
-        data_file (str): Файл в формате XML
+        data_file (str): Файл в формате XML or csv
 
     Returns:
         [tuple]: кортеж из двух значений - первое тип докуммента, второе парсер для его обработки
     """
-    xml_types = dict(
+    parser_type = dict(
         PRODAT=RSXmlParserPRODAT,
-        PRICAT=RSXmlParserPricat
+        PRICAT=RSXmlParserPricat,
+        CAT_CSV=CsvParser,
     )
+    if data_file.endswith('csv'):
+        return 'CAT_CSV', parser_type['CAT_CSV'](file_name=data_file)
     try:
         index = 0
         for line in open(data_file, 'r'):
@@ -370,7 +427,7 @@ def get_xml_parser2(data_file: str):
                 raise StopIteration
             index += 1
         xml_type: str = line.strip()[9:-10]
-        xml_parser = xml_types.get(xml_type, None)
+        xml_parser = parser_type.get(xml_type, None)
         return xml_type, xml_parser(file_name=data_file)
     except FileNotFoundError:
         print(f'Файл {data_file} не найден')
@@ -392,12 +449,16 @@ if __name__ == '__main__':
     # result = download_image(url = 'https://rs24.ru/ctlg/edi/DKC/119/11920/11920_2.jpeg', path=create_path)
     # print(result)
     # exit()
-    fl_xml = 'trash_data\\data\\data.xml'
-    print(get_xml_parser2(fl_xml))
-    fl_xml = 'trash_data\\data\\pricat_.xml'
-    print(get_xml_parser2(fl_xml))
-    exit()
-    parser = RSXmlParserPRODAT(fl_xml)
+    # fl_xml = 'trash_data\\data\\data.xml'
+    # print(get_xml_parser2(fl_xml))
+    # fl_xml = 'trash_data\\data\\pricat_.xml'
+    # print(get_xml_parser2(fl_xml))
+    # exit()
+    parser = CsvParser('trash_data\\categores.csv')
     parser.run()
-    res = parser.get_items()
-    groups = parser.get_groups()
+    result = parser.get_result()
+    pprint(result)
+    # parser = RSXmlParserPRODAT(fl_xml)
+    # parser.run()
+    # res = parser.get_items()
+    # groups = parser.get_groups()
