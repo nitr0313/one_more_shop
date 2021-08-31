@@ -1,5 +1,12 @@
-<i id="i-{{ item.id  }}" class="fa add-to-favorites" data-type="test1" data-id="{{ item.id }}" aria-hidden="true" style="font-size: x-large; cursor: pointer;" title="Количество людей поместивших данные предмет в избранное">
-    {{ item.get_favorite_count }}
+<i
+    id="i-{{ item.id  }}"
+    class="fa {% if item.id in favorite or section == 'favorites' %}fa-thumbs-up{%else%}fa-thumbs-o-up{% endif %} add_to_fav"
+    data-type="test1"
+    data-id="{{ item.id }}"
+    aria-hidden="true"
+    style="font-size: small; cursor: pointer;"
+    title="Количество людей поместивших данные предмет в избранное"
+>
+    {{ item.favorite__count }}
     <span class="sr-only">Количество людей поместивших данные предмет в избранное</span>
 </i>
-
