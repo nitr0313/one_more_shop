@@ -7,6 +7,7 @@
 
 {% block content %}
     <form action='{{ update_db }}' method='POST' enctype="multipart/form-data">
+    {% csrf_token %}
     <div class="form-group">
         <div class="form-file">
             <input type="file" name='items_db' class="form-file-input" id="customFile">
@@ -15,8 +16,24 @@
                 <span class="form-file-button">Browse</span>
             </label>
         </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" name="update_categories" id="update_categories">
+            <label class="form-check-label" for="update_categories">Обновить категории</label>
         </div>
-        {% csrf_token %}
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" name="update_items" id="update_items">
+            <label class="form-check-label" for="update_items">Обновить товары</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" name="update_specs" id="update_specs">
+            <label class="form-check-label" for="update_items">Обновить характеристики товаров</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" name="update_analog_and_related" id="update_analog_and_related">
+            <label class="form-check-label" for="update_items">Обновить аналоги и сопутствующие товары</label>
+        </div>
+
+        </div>        
         <button type='submit'>Обновить базу</button>
     </form>
 {% endblock %}
