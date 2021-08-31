@@ -13,17 +13,6 @@ EMAIL_USE_TLS = True
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-try:
-    with open('secret.json', 'r') as fl:
-        secret = json.load(fl)
-    EMAIL_HOST_USER = secret["EMAIL_HOST_USER"]
-    EMAIL_HOST_PASSWORD = secret["EMAIL_HOST_PASSWORD"]
-    SECRET_KEY = secret["SECRET_KEY"]
-except Exception as e:
-    print(f'Неудачная попытка импорта настроек email, ведите собственные настроки, {e}')
-    EMAIL_HOST_USER = ""
-    EMAIL_HOST_PASSWORD = ""
-
 
 def get_secret(setting, secret):
     try:
@@ -32,6 +21,16 @@ def get_secret(setting, secret):
         raise ImproperlyConfigured(
             f'Set the {setting} environment, variable'
         )
+
+try:
+    with open('secret.json', 'r') as fl:
+        secret = json.load(fl)
+except Exception as e:
+    print(f'Неудачная попытка импорта настроек email, ведите собственные настроки, {e}')
+
+EMAIL_HOST_USER = get_secret("EMAIL_HOST_USER", secret)
+EMAIL_HOST_PASSWORD = get_secret("EMAIL_HOST_PASSWORD", secret)
+SECRET_KEY = get_secret("SECRET_KEY", secret)
 
 
 SERVER_EMAIL = EMAIL_HOST_USER
@@ -64,7 +63,6 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -147,7 +145,7 @@ STATICFILES_DIRS = [
 
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = [BASE_DIR / 'media/']
+MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'

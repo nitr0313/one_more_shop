@@ -17,6 +17,8 @@ INSTALLED_APPS.extend([
     'django_extensions',
 ])
 
+MIDDLEWARE.insert(4, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -32,4 +34,4 @@ DATABASES = {
     # }
 }
 
-print("Local settings loaded")
+print("LOCAL settings loaded")
