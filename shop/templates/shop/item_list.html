@@ -10,9 +10,6 @@
             {% if section == 'home_page' %}
                 {% include 'shop/includes/cart_drop_down.html' %}
             {% endif %}{% endcomment %}
-    {% if nodes %}
-        {% include 'shop/includes/cat_bar.html' %}
-    {% endif %}
     <div class="card-deck mt-5">
         {% for item in items %}
             <div class="card mb-3" style="min-width: 14rem; max-width: 14rem">
@@ -31,14 +28,14 @@
                         {{ item.title }}
                         </li>
                         <li class="list-group-item" style="border-bottom: 0">
-                            {% if item.discount %}
-                                <span style="font-size: medium; font-weight: bold">{{ item.get_price_with_discount }}</span>
+                            {% if item.has_discount %}
+                                <span style="font-size: medium; font-weight: bold">{{ item.price }}</span>
                                 <span class="text-white"
-                                      style="background:rgba(194,0,0,0.67); border-radius: 5px" title="Скидка действует до {{ item.discount.expire_date }}">-{{ item.discount.value }}%</span>
+                                      style="background:rgba(194,0,0,0.67); border-radius: 5px" title="Скидка в процентах">-{{ item.get_discount_value }}%</span>
                                 <br>
-                                <s><span class="text-muted">{{ item.get_raw_price }}</span></s>
+                                <s><span class="text-muted">{{ item.get_item_price }}</span></s>
                             {% else %}
-                                <span style="font-size: medium; font-weight: bold">{{ item.get_raw_price }}</span><br>
+                                <span style="font-size: medium; font-weight: bold">{{ item.get_item_price }}</span><br>
                             {% endif %}
                         </li>
                         {% comment %} <li class="list-group-item" style="border-bottom: 0; border-top: 0">
@@ -78,4 +75,11 @@
 
 {% block scripts %}
     <script src="{% static 'js/scripts.js' %}"></script>
+
+    <script>
+        $(function() {
+            $( '#dl-menu' ).dlmenu();
+        });
+    </script>
+
 {% endblock %}

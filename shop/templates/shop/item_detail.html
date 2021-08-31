@@ -16,12 +16,12 @@
                     <li class="list-group-item" style="float:left"><a href="{% url 'home' %}" itemprop="item" title="Каталог товаров"><span itemprop="name">Каталог товаров</span>
                         <meta itemprop="position" content="2">
                     </a></li>
-                {% for cat in object.category_path %}
+                {% comment %} {% for cat in object.category_path %}
                 
                     <li class="list-group-item" style="float:left"><a href="{% url 'home' %}?cat_code={{ cat.code }}" itemprop="item" title="{{ cat.title }}"><span itemprop="name">{{ cat.title }}</span>
                         <meta itemprop="position" content="2">
                     </a></li>
-                {% endfor %}
+                {% endfor %} {% endcomment %}
 
                     {% comment %} <li itemscope="" itemprop="itemListElement" itemtype="http://schema.org/ListItem"><a href="/search.htm?m=1&amp;N=20000010" itemprop="item" title="Генераторы электроэнергии и элементы питания"><span itemprop="name">Генераторы электроэнергии и элементы питания</span>
                         <meta itemprop="position" content="2">
@@ -90,10 +90,10 @@
         <h3>Для заказа зарегистрируйтесь или залогиньтесь</h3>
         <div class="row m-5">
     {% endif %}
-            <a class="btn btn-primary m-3" data-toggle="collapse" href="#collapseReviews" role="button"
+            {% comment %} <a class="btn btn-primary m-3" data-toggle="collapse" href="#collapseReviews" role="button"
                aria-expanded="false" aria-controls="collapseReviews">
                 Отзывов: {{ object.get_rating_count }}
-            </a>
+            </a> {% endcomment %}
         </div>
 
     <div class="collapse  w-50" id="collapseOrder">
@@ -104,20 +104,21 @@
     </div>
 
     <div class="collapse w-50" id="collapseReviews">
-
+{% comment %}
         {% for comment in comments %}
-            <div class="card card-body">
+             <div class="card card-body">
                 Пользователь: {{ comment.user.username }}<br>
                 Поставил отценку: {{ comment.rating }}<br>
                 Отзыв: {{ comment.body }}
-            </div>
+            </div> 
         {% empty %}
             <div class="card card-body">
                 Отзывов пока нет
             </div>
         {% endfor %}
     </div>
-     {% comment %} Аналоги и сопуствующие товары  {% endcomment %}
+{% endcomment %}
+     Аналоги и сопуствующие товары 
     {% include "shop/includes/analog_carusel.html" %}
 </div>
 {% endblock %}
