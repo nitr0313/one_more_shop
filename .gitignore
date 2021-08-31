@@ -6,10 +6,13 @@ __pycache__/
 *.so
 
 # enviroment
-venv/
+?venv/
+venv*/
 
 *.7zip
 *secret.py
+*secret.json
+!!!*
 
 # idea config
 .idea/
@@ -65,3 +68,5 @@ docs/_build/
 trash_data/
 media/items
 media/users
+probe2.py
+tmp/
