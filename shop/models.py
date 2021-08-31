@@ -1,33 +1,21 @@
 import datetime
 import json
+import re
 
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models.deletion import CASCADE
-from django.db.models.query_utils import Q
+from django.db.models.fields import DecimalField, related
 from django.utils.safestring import mark_safe
 from django.urls.base import reverse
-from django.db.models import Sum
-from django.utils import timezone
 
 from mptt.fields import TreeForeignKey
 from mptt.models import MPTTModel
 import mptt
 from pytils.translit import slugify
-from autoslug import AutoSlugField
 
 
 User = get_user_model()
 
-# UNIT_CHOICE = (
-#     ('шт', 'шт'),
-#     ('г', 'грамм'),
-#     ('кг', 'килограмм'),
-#     ('м', 'метр'),
-#     ('см', 'сантиметр'),
-#     ('мм', 'милиметр'),
-
-# )
 
 UNIT_CHOICE = (
     ('GRM', 'грамм'),
@@ -51,8 +39,8 @@ UNIT_CHOICE = (
 class Item(models.Model):
     brand = models.CharField(max_length=250, blank=True, default="")
     code = models.CharField(max_length=10, db_index=True, blank=True)
-    slug = AutoSlugField(populate_from='code')
-    category = TreeForeignKey('Category', related_name='cat', null=True, blank=True, on_delete=models.CASCADE)
+    slug = models.SlugField()
+    category = TreeForeignKey('Category', related_name='cat', null=True, blank=True, on_delete=models.SET_NULL)
     title = models.CharField(max_length=250, db_index=True, unique=True, verbose_name="Название")
     description = models.TextField(max_length=1000, db_index=True, verbose_name="Описание", blank=True, default="")
     price = models.DecimalField(verbose_name="Цена", max_digits=10,  decimal_places=2)
@@ -108,8 +96,8 @@ class Item(models.Model):
         return d
 
     def save(self, *args, **kwargs):
-        # if not self.id or not self.slug:
-        #     self.slug = slugify(self.code)
+        if not self.id or not self.slug:
+            self.slug = slugify(self.code)
         return super().save(*args, **kwargs)
 
     class Meta:
@@ -137,41 +125,49 @@ class Item(models.Model):
         kop = int((round(price, 2) - int(price)) * 100)
         return f'{int(price)}{"," + str(kop) if kop else ""} руб.'
 
+    def get_discount_value(self):
+        return 100 - int((self.price / self.base_price) * 100)
+
     @property
-    def get_raw_price(self):
+    def get_item_price(self):
+        return self.get_price(self.base_price)
+
+    @property
+    def get_price_with_discount(self) -> str:
         return self.get_price(self.price)
+        # if discount := self.discount():
+        #     price_with_discount = self.price - self.price / 100 * discount.value
+        # else:
+        #     price_with_discount = self.price
+        # return self.get_price(price_with_discount)
 
     @property
-    def get_price_with_discount(self):
-        if discount := self.discount():
-            price_with_discount = self.price - self.price / 100 * discount.value
-        else:
-            price_with_discount = self.price
-        return self.get_price(price_with_discount)
-
-    @property
-    def get_raw_price_with_discount(self):
+    def get_raw_price_with_discount(self) -> DecimalField:
         """
         Функция возвращает цену со скидкой в формате float
-        :return: Float
+        :return: Decimal
         """
-        if discount := self.discount():
-            price_with_discount = self.price - self.price / 100 * discount.value
-        else:
-            price_with_discount = self.price
-        return price_with_discount
+        return self.price
+        # if discount := self.discount():
+        #     price_with_discount = self.price - self.price / 100 * discount.value
+        # else:
+        #     price_with_discount = self.price
+        # return price_with_discount
 
-    def discount(self):
+    def has_discount(self):
         """
         Находим скидки на эту дату и применяем самую большую
         :return: int
         """
-        discounts = Discount.objects.filter(item=self, expire_date__gte=datetime.date.today(),
-                                            start_date__lte=datetime.date.today())
-        if not discounts:
-            return None
-        # disc = discounts[0].value
-        return discounts[0]
+        # discounts = Discount.objects.filter(item=self, expire_date__gte=datetime.date.today(),
+        #                                     start_date__lte=datetime.date.today())
+        # if not discounts:
+        #     return None
+        # # disc = discounts[0].value
+        # return discounts[0]
+        if self.price != self.base_price:
+            return True
+        return False
 
     @property
     def get_rating(self):
@@ -188,7 +184,8 @@ class Item(models.Model):
 class Category(MPTTModel):
     title = models.CharField(max_length=150)
     code = models.CharField(max_length=15, unique=True, db_index=True)
-    slug = AutoSlugField(populate_from='code', always_update=True, unique=True)
+    etim = models.CharField(max_length=20, null=True)
+    slug = models.SlugField()
     parent = TreeForeignKey(
         'self', null=True, blank=True, related_name='children', on_delete=models.CASCADE)
     
@@ -200,7 +197,12 @@ class Category(MPTTModel):
         order_insertion_by=['title']
 
     def __str__(self):
-        return self.title
+        return f"{self.code} -> {self.title}"
+
+    def save(self, *args, **kwargs):
+        if not self.id or not self.slug:
+            self.slug = slugify(self.code)
+        super().save(*args, **kwargs)
 
 # mptt.register(Category, order_insertion_by=['name'])
 
@@ -211,8 +213,7 @@ class SpecItem(models.Model):
     Характеристики товара
     """
     code = models.CharField(max_length=20, verbose_name="Код характеристики", unique=True)
-    title = models.CharField(max_length=200, verbose_name='Наименование арактеристики, (и единица измерения)')
-    # value = models.ForeignKey('SpecValue', verbose_name='Значение характеристики', on_delete=models.CASCADE, null=True)
+    title = models.CharField(max_length=200, verbose_name='Наименование характеристики, (и единица измерения)')
     uom = models.CharField(max_length=20, verbose_name='Еденицы измерения', null=True)
 
     def __str__(self):
@@ -232,7 +233,7 @@ class SpecValue(models.Model):
     value = models.CharField(max_length=150, verbose_name="Значение характеристики", null=True)
 
     def __str__(self):
-        return self.value
+        return f"{self.spec_item} -> {self.value}"
 
     class Meta:
         verbose_name = "Значение характеристики"
@@ -241,7 +242,7 @@ class SpecValue(models.Model):
 
 
 class Discount(models.Model):
-    item = models.ForeignKey('Item', on_delete=models.CASCADE)
+    item = models.ForeignKey('Item', on_delete=models.CASCADE, related_name='discount')
     value = models.IntegerField(default=0)
     start_date = models.DateField()
     expire_date = models.DateField()
