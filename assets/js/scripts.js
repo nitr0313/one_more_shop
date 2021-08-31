@@ -37,17 +37,17 @@ $.ajaxSetup({
 const add_to_favorites_url = '/add_to_fav/';
 const remove_from_favorites_url = '/remove_fav/';
 const favorites_api_url = '/v1/api/favorites/';
-const added_to_favorites_class = 'fa-thumbs-up added';
-const not_favorites_class = 'fa-thumbs-o-up';
+const added_to_favorites_class = 'fa fa-thumbs-up';
+const not_favorites_class = 'fa fa-thumbs-o-up';
 
 function add_to_favorites() {
-    $('.add-to-favorites').each((index, el) => {
+    // $('.fa-thumbs-up', '.fa-thumbs-o-up').each((index, el) => {
+    $('.add_to_fav').each((index, el) => {
         $(el).click((e) => {
             e.preventDefault();
 
             const type = $(el).data('type');
             const id = $(el).data('id');
-            console.log(el);
             if ($(e.target).hasClass(added_to_favorites_class)) {
                 console.log('has class ' + added_to_favorites_class);
                 $.ajax({
@@ -61,7 +61,10 @@ function add_to_favorites() {
                     success: (data) => {
                         $(el).removeClass(added_to_favorites_class);
                         $(el).addClass(not_favorites_class);
-                        get_favorites()
+                        // get_favorites();
+                        if (window.location.pathname === "/favorites/") {
+                            $(el).parent().parent().parent().parent().attr('hidden', 'true');
+                        }
                     }
                 });
             } else {
@@ -77,22 +80,25 @@ function add_to_favorites() {
                     success: (data) => {
                         $(el).removeClass(not_favorites_class);
                         $(el).addClass(added_to_favorites_class);
-                        get_favorites()
+                        
+                        // get_favorites();
                     }
                 })
             }
+            
         })
-    })
+    })    
 }
 
 function get_favorites() {
     // get_session_favorites_statistics();
 
     $.getJSON(favorites_api_url, (json) => {
+        console.log(json);
         if (json !== null) {
             for (let i = 0; i < json.length; i++) {
-                // console.log(json[i]);
-                $('.add-to-favorites').each((index, el) => {
+                console.log(json[i]);
+                $('.add-to-fav').each((index, el) => {
                     const type = $(el).data('type');
                     const id = $(el).data('id');
 
@@ -205,7 +211,7 @@ function get_cart_items() {
 $(document).ready(function () {
     add_to_cart();
     add_to_favorites();
-    get_favorites();
+    // get_favorites();
     get_cart_items();
     $('.owl-carousel').owlCarousel({
         autoWidth:true,
